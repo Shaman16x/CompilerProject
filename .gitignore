@@ -1,6 +1,8 @@
 # Compiled Files #
 ##########################
 *.o
+lextest
+lex.yy.c
 
 # Temp Filese #
 *~
