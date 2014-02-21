@@ -2,8 +2,9 @@
 ##########################
 *.o
 lextest
-lex.yy.c
+parsetest
 
 # Temp Filese #
+##########################
 *~
 
