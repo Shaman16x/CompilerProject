@@ -1,1 +1,5 @@
-asdf
+wut + wat + wot
+type num = int
+type list = array of num
+fun
+

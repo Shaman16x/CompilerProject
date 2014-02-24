@@ -34,9 +34,92 @@ void yyerror(char *s)
 
 %%
 
-program:	exp
+program:	/* empty? */
+|           exp program
+|           dec program
+;
 
-exp:   ID
+decs:       /* empty */
+|           dec decs
+;
+
+dec:        tydec
+|           vardec
+|           fundec
+;
+
+tydec:      TYPE ID EQ ty
+;
+
+ty:         ID
+|           LBRACE tyfields RBRACE
+|           ARRAY OF ID
+;
+
+tyfields:   /* empty */
+|           ID COLON ID
+|           ID COLON ID COMMA tyfields
+;
+
+vardec:     VAR ID ASSIGN exp
+|           VAR ID COLON ID ASSIGN exp
+;
+
+fundec:     FUNCTION ID LPAREN tyfields RPAREN EQ exp
+|           FUNCTION ID LPAREN tyfields RPAREN COLON ID EQ exp
+;
+
+
+letblock:   LET decs IN expseq END
+;
+
+whileblock: WHILE exp DO exp SEMICOLON
+
+ifblock:    IF exp THEN exp
+|           IF exp THEN exp ELSE exp
+;   
+
+forblock:   FOR ID ASSIGN exp TO exp DO exp SEMICOLON
+;
+
+expseq:     explist
+|           LPAREN explist RPAREN           
+;
+
+explist:    exp
+|           exp SEMICOLON explist
+;
+
+args:    
+|           exp
+|           exp COLON args
+;
+
+exp:        ID                     // TODO: better exp organization
+|           ID LPAREN args RPAREN
+|           LPAREN exp RPAREN
+|           letblock
+|           whileblock
+|           ifblock
+|           forblock
+|           BREAK
+|           dec
+|           exp PLUS exp            // TODO add precedence levelse
+|           exp MINUS exp
+|           exp TIMES exp
+|           exp DIVIDE exp
+|           exp EQ exp
+|           exp NEQ exp
+|           exp LT exp
+|           exp LE exp
+|           exp GT exp
+|           exp GE exp
+|           exp AND exp
+|           exp OR exp
+|           ID ASSIGN exp
+|           INT
+|           STRING
+;
 
 
 
