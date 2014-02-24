@@ -21,6 +21,14 @@ void yyerror(char *s)
 %token <sval> ID STRING
 %token <ival> INT
 
+%right ASSIGN
+%left OR
+%left AND
+%left EQ NEQ
+%left GT GE LT LE
+%left PLUS MINUS
+%left TIMES DIVIDE
+
 %token 
   COMMA COLON SEMICOLON LPAREN RPAREN LBRACK RBRACK 
   LBRACE RBRACE DOT 
@@ -104,7 +112,7 @@ exp:        ID                     // TODO: better exp organization
 |           forblock
 |           BREAK
 |           dec
-|           exp PLUS exp            // TODO add precedence levelse
+|           exp PLUS exp            
 |           exp MINUS exp
 |           exp TIMES exp
 |           exp DIVIDE exp
