@@ -82,7 +82,7 @@ letblock:   LET decs IN exps END
 whileblock: WHILE exp DO exp SEMICOLON
 
 ifblock:    IF exp THEN exp
-|           IF exp THEN exp ELSE exp
+//|           IF exp THEN exp ELSE exp
 ;   
 
 forblock:   FOR ID ASSIGN exp TO exp DO exp SEMICOLON
@@ -114,7 +114,7 @@ exp:        lvalue                 // TODO: better exp organization
 |           forblock
 |           BREAK
 |           dec
-|           ID ASSIGN exp
+|           lvalue ASSIGN exp
 |           bool
 ;       
 
