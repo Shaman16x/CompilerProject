@@ -29,3 +29,8 @@ Lexical Analyzier
 The Lexical Analyzier tokenizes the code file
 
 Note: most of the code was provided by instructor
+
+Parser
+--------------------------------------------------------------------
+Specifies the context-free grammer of the compiler
+
