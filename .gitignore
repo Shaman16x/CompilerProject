@@ -1,6 +1,7 @@
 # Compiled Files #
 ##########################
 *.o
+*.output
 lextest
 parsetest
 
