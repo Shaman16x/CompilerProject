@@ -83,6 +83,7 @@ whileblock: WHILE exp DO exp
 ;
 
 ifblock:    IF exp THEN exp ELSE exp
+|           IF exp THEN ifblock
 |           IF exp THEN exp
 ;   
 
@@ -109,9 +110,8 @@ record:     ID EQ exp
 |           ID EQ exp COMMA record
 ;
 
-exp:        NIL                     // TODO: better exp organization
-|           LPAREN RPAREN           // no value
-|           expseq
+exp:        LPAREN RPAREN           // no value
+|           expseq                  // TODO: better exp organization
 |           letblock
 |           whileblock
 |           ifblock
@@ -122,8 +122,6 @@ exp:        NIL                     // TODO: better exp organization
 |           ID LBRACE RBRACE
 |           ID LBRACK exp RBRACK OF exp                // array creation
 |           lvalue ASSIGN exp
-|           ID LPAREN RPAREN
-|           ID LPAREN args RPAREN
 |           bool
 ;       
 
