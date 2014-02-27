@@ -8,7 +8,7 @@ parsetest
 # autogened C files #
 ##########################
 y.tab.*
-lex.yy.*
+LexicalAnalyzer/lex.yy.*
 
 # Temp Filese #
 ##########################
