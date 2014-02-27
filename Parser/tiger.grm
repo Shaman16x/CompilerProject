@@ -83,7 +83,6 @@ whileblock: WHILE exp DO exp
 ;
 
 ifblock:    IF exp THEN exp ELSE exp
-|           IF exp THEN ifblock
 |           IF exp THEN exp
 ;   
 
