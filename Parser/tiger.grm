@@ -79,13 +79,14 @@ fundec:     FUNCTION ID LPAREN tyfields RPAREN EQ exp
 letblock:   LET decs IN exps END
 ;
 
-whileblock: WHILE exp DO exp SEMICOLON
+whileblock: WHILE exp DO exp
+;
 
 ifblock:    IF exp THEN exp
-//|           IF exp THEN exp ELSE exp
+|           IF exp THEN exp ELSE exp
 ;   
 
-forblock:   FOR ID ASSIGN exp TO exp DO exp SEMICOLON
+forblock:   FOR ID ASSIGN exp TO exp DO exp
 ;
 
 expseq:     LPAREN exps RPAREN           
@@ -104,17 +105,26 @@ lvalue:     ID
 |           lvalue LBRACE exp RBRACE
 ;
 
+record:     ID EQ exp
+|           ID EQ exp COMMA record
+;
+
 exp:        lvalue                 // TODO: better exp organization
 |           NIL
-|           expseq
 |           LPAREN RPAREN           // no value
+|           expseq
 |           letblock
 |           whileblock
 |           ifblock
 |           forblock
 |           BREAK
 |           dec
+|           ID LBRACE record RBRACE        // for record creation
+|           ID LBRACE RBRACE
+|           ID [exp] OF exp                // array creation
 |           lvalue ASSIGN exp
+|           ID LPAREN RPAREN
+|           ID LPAREN args RPAREN
 |           bool
 ;       
 
