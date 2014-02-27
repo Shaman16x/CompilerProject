@@ -102,7 +102,6 @@ args:       exp
 
 lvalue:     ID
 |           lvalue DOT ID
-|           lvalue LBRACK exp RBRACK
 ;
 
 record:     ID EQ exp
