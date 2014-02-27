@@ -5,6 +5,11 @@
 lextest
 parsetest
 
+# autogened C files #
+##########################
+y.tab.*
+lex.yy.*
+
 # Temp Filese #
 ##########################
 *~
