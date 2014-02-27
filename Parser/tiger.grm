@@ -82,8 +82,8 @@ letblock:   LET decs IN exps END
 whileblock: WHILE exp DO exp
 ;
 
-ifblock:    IF exp THEN exp
-|           IF exp THEN exp ELSE exp
+ifblock:    IF exp THEN exp ELSE exp
+|           IF exp THEN exp
 ;   
 
 forblock:   FOR ID ASSIGN exp TO exp DO exp
@@ -102,15 +102,14 @@ args:       exp
 
 lvalue:     ID
 |           lvalue DOT ID
-|           lvalue LBRACE exp RBRACE
+|           lvalue LBRACK exp RBRACK
 ;
 
 record:     ID EQ exp
 |           ID EQ exp COMMA record
 ;
 
-exp:        lvalue                 // TODO: better exp organization
-|           NIL
+exp:        NIL                     // TODO: better exp organization
 |           LPAREN RPAREN           // no value
 |           expseq
 |           letblock
@@ -121,7 +120,7 @@ exp:        lvalue                 // TODO: better exp organization
 |           dec
 |           ID LBRACE record RBRACE        // for record creation
 |           ID LBRACE RBRACE
-|           ID [exp] OF exp                // array creation
+|           ID LBRACK exp RBRACK OF exp                // array creation
 |           lvalue ASSIGN exp
 |           ID LPAREN RPAREN
 |           ID LPAREN args RPAREN
@@ -158,7 +157,9 @@ neg:        MINUS term
 
 term:       INT
 |           STRING
-|           LPAREN bool RPAREN
+|           lvalue
+|           NIL
+|           LPAREN exp RPAREN
 |           ID LPAREN RPAREN
 |           ID LPAREN args RPAREN
 ;
