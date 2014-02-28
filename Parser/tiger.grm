@@ -21,6 +21,8 @@ void yyerror(char *s)
 %token <sval> ID STRING
 %token <ival> INT
 
+%left IF THEN
+%right ELSE
 %right ASSIGN
 %left OR
 %left AND
@@ -28,8 +30,7 @@ void yyerror(char *s)
 %nonassoc GT GE LT LE
 %left PLUS MINUS
 %left TIMES DIVIDE
-%left THEN
-%right ELSE
+
 
 %token 
   COMMA COLON SEMICOLON LPAREN RPAREN LBRACK RBRACK 
