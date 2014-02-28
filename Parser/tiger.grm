@@ -28,6 +28,8 @@ void yyerror(char *s)
 %nonassoc GT GE LT LE
 %left PLUS MINUS
 %left TIMES DIVIDE
+%left THEN
+%right ELSE
 
 %token 
   COMMA COLON SEMICOLON LPAREN RPAREN LBRACK RBRACK 
@@ -85,7 +87,7 @@ whileblock: WHILE exp DO exp
 
 
 ifblock:		IF exp THEN exp 
-|				IF exp THEN exp ELSE exp
+|			IF exp THEN exp ELSE exp
 ;
 
 
@@ -106,6 +108,7 @@ args:       exp
 
 lvalue:     ID
 |           lvalue DOT ID
+|	    ID LBRACK exp RBRACK 
 ;
 
 record:     ID EQ exp
