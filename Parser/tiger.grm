@@ -42,7 +42,7 @@ void yyerror(char *s)
 
 %%
 
-program:    exps
+program:    exp
 ;
 
 
@@ -93,8 +93,10 @@ forblock:   FOR ID ASSIGN exp TO exp DO exp
 ;
 
 
-exps:       LPAREN RPAREN           // no value
-|				LPAREN exps RPAREN
+expseq: LPAREN exps RPAREN
+;
+
+exps:       exp
 |           exps SEMICOLON exp
 ;
 
@@ -155,9 +157,10 @@ term:       INT
 |           STRING
 |           lvalue
 |           NIL
-|           LPAREN exp RPAREN
+|           expseq                  // also counts for (exp)
 |           ID LPAREN RPAREN
 |           ID LPAREN args RPAREN
+|           LPAREN RPAREN           // empty expression
 ;
 
 	
