@@ -58,25 +58,28 @@ dec:        tydec
 |           fundec
 ;
 
-tydec:      TYPE ID EQ ty
+tydec:      TYPE typeid EQ ty
 ;
 
-ty:         ID
+ty:         typeid
 |           LBRACE tyfields RBRACE
-|           ARRAY OF ID
+|           ARRAY OF typeid
 ;
 
 tyfields:   /* empty */
-|           ID COLON ID
-|           ID COLON ID COMMA tyfields
+|           ID COLON typeid
+|           ID COLON typeid COMMA tyfields
+;
+
+typeid:     ID
 ;
 
 vardec:     VAR ID ASSIGN exp
-|           VAR ID COLON ID ASSIGN exp
+|           VAR ID COLON typeid ASSIGN exp
 ;
 
 fundec:     FUNCTION ID LPAREN tyfields RPAREN EQ exp
-|           FUNCTION ID LPAREN tyfields RPAREN COLON ID EQ exp
+|           FUNCTION ID LPAREN tyfields RPAREN COLON typeid EQ exp
 ;
 
 
@@ -109,12 +112,14 @@ args:       exp
 
 lvalue:     ID
 |           lvalue DOT ID
-|	    ID LBRACK exp RBRACK 
+|	        lvalue LBRACK exp RBRACK
 ;
 
 record:     ID EQ exp
 |           ID EQ exp COMMA record
 ;
+
+arrcreate:  lvalue LBRACK exp RBRACK OF exp
 
 exp:        letblock
 |           whileblock
@@ -124,7 +129,7 @@ exp:        letblock
 |           dec
 |           ID LBRACE record RBRACE        // for record creation
 |           ID LBRACE RBRACE
-|           ID LBRACK exp RBRACK OF exp                // array creation
+|           arrcreate                // array creation
 |           lvalue ASSIGN exp
 |           bool
 ;       
