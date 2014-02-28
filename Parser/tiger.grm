@@ -24,8 +24,8 @@ void yyerror(char *s)
 %right ASSIGN
 %left OR
 %left AND
-%left EQ NEQ
-%left GT GE LT LE
+%nonassoc EQ NEQ
+%nonassoc GT GE LT LE
 %left PLUS MINUS
 %left TIMES DIVIDE
 
@@ -42,8 +42,9 @@ void yyerror(char *s)
 
 %%
 
-program:    exp 
+program:    exps
 ;
+
 
 decs:       /* empty */
 |           dec decs
@@ -82,18 +83,19 @@ letblock:   LET decs IN exps END
 whileblock: WHILE exp DO exp
 ;
 
-ifblock:    IF exp THEN exp ELSE exp
-|           IF exp THEN exp
-;   
+
+ifblock:		IF exp THEN exp 
+|				IF exp THEN exp ELSE exp
+;
+
 
 forblock:   FOR ID ASSIGN exp TO exp DO exp
 ;
 
-expseq:     LPAREN exps RPAREN           
-;
 
-exps:       exp
-|           exp SEMICOLON exps
+exps:       LPAREN RPAREN           // no value
+|				LPAREN exps RPAREN
+|           exps SEMICOLON exp
 ;
 
 args:       exp
@@ -108,9 +110,7 @@ record:     ID EQ exp
 |           ID EQ exp COMMA record
 ;
 
-exp:        LPAREN RPAREN           // no value
-|           expseq                  // TODO: better exp organization
-|           letblock
+exp:        letblock
 |           whileblock
 |           ifblock
 |           forblock
