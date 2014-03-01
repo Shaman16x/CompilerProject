@@ -110,16 +110,20 @@ args:       exp
 |           exp COMMA args
 ;
 
-lvalue:     ID
-|           lvalue DOT ID
-|	        lvalue LBRACK exp RBRACK
+lvalue:     ID DOT lvalue
+|	        ID brkchain
+;
+
+brkchain:   /*empty*/
+|           LBRACK exp RBRACK brkchain
+|           LBRACK exp RBRACK DOT lvalue
 ;
 
 record:     ID EQ exp
 |           ID EQ exp COMMA record
 ;
 
-arrcreate:  lvalue LBRACK exp RBRACK OF exp
+arrcreate:  ID LBRACK exp RBRACK OF exp
 
 exp:        letblock
 |           whileblock
