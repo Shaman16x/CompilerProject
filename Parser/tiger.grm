@@ -1,7 +1,9 @@
 %{
 #include <stdio.h>
 #include "util.h"
+#include "symbol.h" 
 #include "errormsg.h"
+#include "absyn.h"
 
 int yylex(void); /* function prototype */
 
@@ -15,25 +17,15 @@ void yyerror(char *s)
 
 
 %union {
-	int pos;
-	int ival;
-	string sval;
-	
-	A_exp exp;
+  int pos;
+  int ival;
+  string sval;
 
-	}
+}
 
-%token <sval> ID 
-%token <ival> INT 
+%token <sval> ID
+%token <ival> INT
 %token <sval> STRING
-
-%nonassoc IF THEN WHILE DO FOR TO
-%left ELSE
-%nonassoc ASSIGN 
-%left OR AND
-%nonassoc EQ NEQ GT LT GE LE
-%left PLUS MINUS 
-%left TIMES DIVIDE
 
 %token 
   COMMA COLON SEMICOLON LPAREN RPAREN LBRACK RBRACK 
@@ -44,137 +36,95 @@ void yyerror(char *s)
   BREAK NIL
   FUNCTION VAR TYPE 
 
+%nonassoc OF
+%nonassoc IF THEN WHILE DO FOR TO
+%left ELSE
+%nonassoc ASSIGN 
+%left OR AND
+%nonassoc EQ NEQ GT LT GE LE
+%left PLUS MINUS 
+%left TIMES DIVIDE
+
 %start program
 
 %%
 
-program:    exp
-;
+program:	exp
+
+term:      INT                        {$$ = A_IntExp(EM_tokPos, $1); }
+        |  STRING                     {$$ = A_StringExp(EM_tokPos, $1);}
+        |  lvalue                     {$$ = A_VarExp(EM_tokPos, $1);}
+        |  LPAREN expseq RPAREN       {$$ = A_SeqExp(EM_tokPos, $2);}
+        |  MINUS exp                  {$$ = A_OpExp(EM_tokPos, A_IntExp(EM_tokPos, 0), $1, $2);}
 
 
-decs:       /* empty */
-|           dec decs
-;
+exp:       term                             
+        |  NIL                              {$$ = A_NilExp(EM_tokPos); }
+        |  IF exp THEN exp                  {$$ = A_IfExp(EM_tokPos, $2, $4);}
+        |  IF exp THEN exp ELSE exp         {$$ = A_IfExp(EM_tokPos, $2, $4, $6);}
+        |  WHILE exp DO exp                 {$$ = A_WhileExp(EM_tokPos, $2, $4);}
+        |  FOR ID ASSIGN exp TO exp DO exp  {$$ = A_ForExp(EM_tokPos, $2, $4, $6, $8);}
+        |  BREAK                            {$$ = A_BreakExp(EM_tokPos);}
+        |  LET decs IN expseq END           {$$ = A_LetExp(EM_tokPos, $2, $4);}
+        |  ID LPAREN args RPAREN            {$$ = A_CallExp(EM_tokPos, $1, $3);}
+        |  ID LBRACE recfields RBRACE       {$$ = A_RecordExp(EM_tokPos, $1, $3);}
+        |  ID LBRACK exp RBRACK OF exp      {$$ = A_ArrayExp(EM_tokPos, $3, $6);}
+        |  exp TIMES exp                    {$$ = A_OpExp(EM_tokPos, $2, $1, $3);}
+        |  exp DIVIDE exp                   {$$ = A_OpExp(EM_tokPos, $2, $1, $3);}
+        |  exp PLUS exp                     {$$ = A_OpExp(EM_tokPos, $2, $1, $3);} 
+        |  exp MINUS exp                    {$$ = A_OpExp(EM_tokPos, $2, $1, $3);}
+        |  exp EQ exp                       {$$ = A_OpExp(EM_tokPos, $2, $1, $3);}
+        |  exp NEQ exp                      {$$ = A_OpExp(EM_tokPos, $2, $1, $3);}
+        |  exp LT exp                       {$$ = A_OpExp(EM_tokPos, $2, $1, $3);}
+        |  exp LE exp                       {$$ = A_OpExp(EM_tokPos, $2, $1, $3);}
+        |  exp GT exp                       {$$ = A_OpExp(EM_tokPos, $2, $1, $3);}
+        |  exp GE exp                       {$$ = A_OpExp(EM_tokPos, $2, $1, $3);}
+        |  exp OR exp                       {$$ = A_OpExp(EM_tokPos, $2, $1, $3);}
+        |  exp AND exp                      {$$ = A_OpExp(EM_tokPos, $2, $1, $3);}
+        |  lvalue ASSIGN exp                {$$ = A_AssignExp(EM_tokPos, $1, $3);}
 
-dec:        tydec
-|           vardec
-|           fundec
-;
+expseq: /*empty*/                      
+        | expseq1                      
 
-tydec:      TYPE typeid EQ ty							
-;
+expseq1: exp                           
+        |  exp SEMICOLON expseq1       
 
-ty:         typeid
-|           LBRACE tyfields RBRACE
-|           ARRAY OF typeid
-;
+args:   /* empty */                    
+        |  args1                       
 
-tyfields:   /* empty */
-|           ID COLON typeid
-|           ID COLON typeid COMMA tyfields
-;
+args1:  exp                            
+        |  exp COMMA args1             
+        
+recfields: /* empty */                 
+        |  recfields1                  
 
-typeid:     ID
-;
+recfields1: ID EQ exp                  
+        |  ID EQ exp COMMA recfields1  	//	{$$ = A_EfieldList(EM_tokPos, $1, $3);}
 
-vardec:     VAR ID ASSIGN exp
-|           VAR ID COLON typeid ASSIGN exp
-;
+lvalue: ID                             		{$$ = A_SimpleVar(EM_tokPos, $1);}
+        | lvalue DOT ID                		{$$ = A_FieldVar(EM_tokPos, $1, $3);}
+        | lvalue LBRACK exp RBRACK    			{$$ = A_SubscriptVar(A_SimpleVar(EM_tokPos, $1), $1, $3);}
+        | ID LBRACK exp RBRACK         		{$$ = A_SubscriptVar(EM_tokPos, $1, $3);}
 
-fundec:     FUNCTION ID LPAREN tyfields RPAREN EQ exp
-|           FUNCTION ID LPAREN tyfields RPAREN COLON typeid EQ exp
-;
+ty:     ID                             
+        |  LBRACE tyfields RBRACE      		{$$ = A_ArrayTy(EM_tokPos, $2);}
+        |  ARRAY OF ID                 
 
+decs:   /* empty */                    
+        |  vardec decs                 
+        |  typedec decs                
+        |  funcdec decs                
 
-letblock:   LET decs IN exps END		{$$ = A_LetExp(EM_tokPos, $2, $4);}
-;
+vardec:    VAR ID ASSIGN exp           
+        |  VAR ID COLON ID ASSIGN exp  
 
-whileblock: WHILE exp DO exp			{$$ = A_WhileExp(EM_tokPos, $2, $4);}
-;
+typedec:   TYPE ID EQ ty               
 
+funcdec:   FUNCTION ID LPAREN tyfields RPAREN EQ exp   
+        |  FUNCTION ID LPAREN tyfields RPAREN COLON ID EQ exp  
 
-ifblock:    IF exp THEN exp 			{$$ = A_IfExp(EM_tokPos, $2, $4);}
-|	    IF exp THEN exp ELSE exp		{$$ = A_IfExp(EM_tokPos, $2, $4, $6);}
-;
+tyfields: /* empty */                  
+        | tyfields1                    
 
-
-forblock:   FOR ID ASSIGN exp TO exp DO exp	{$$ = A_ForExp(EM_tokPos, $2, $4, $6, $8);}
-;
-
-
-expseq: LPAREN exps RPAREN
-;
-
-exps:       exp
-|           exps SEMICOLON exp
-;
-
-args:       exp
-|           exp COMMA args
-;
-
-lvalue:     ID DOT lvalue
-|	        ID brkchain
-;
-
-brkchain:   /*empty*/
-|           LBRACK exp RBRACK brkchain
-|           LBRACK exp RBRACK DOT lvalue
-;
-
-record:     ID EQ exp
-|           ID EQ exp COMMA record
-;
-
-arrcreate:  ID LBRACK exp RBRACK OF exp		{$$ = A_ArrayExp(EM_tokPos, $3, $6);}
-
-exp:        letblock
-|           whileblock
-|           ifblock
-|           forblock
-|           BREAK				{$$ = A_BreakExp(EM_tokPos);}
-|           dec
-|           ID LBRACE record RBRACE        // for record creation
-|           ID LBRACE RBRACE
-|           arrcreate                // array creation
-|           lvalue ASSIGN exp			{$$ = A_AssignExp(EM_tokPos, $1, $3);}
-|           bool
-;       
-
-bool:       bool AND comp        // TODO: better precedence names
-|           bool OR comp
-|           comp
-;
-
-comp:       sumop EQ sumop			{$$ = A_OpExp(EM_tokPos, $2, $1, $3);}
-|           sumop NEQ sumop			{$$ = A_OpExp(EM_tokPos, $2, $1, $3);}
-|           sumop LT sumop			{$$ = A_OpExp(EM_tokPos, $2, $1, $3);}
-|           sumop LE sumop			{$$ = A_OpExp(EM_tokPos, $2, $1, $3);}
-|           sumop GT sumop			{$$ = A_OpExp(EM_tokPos, $2, $1, $3);}
-|           sumop GE sumop			{$$ = A_OpExp(EM_tokPos, $2, $1, $3);}
-|           sumop					
-;
-
-sumop:      sumop PLUS multop      		{$$ = A_OpExp(EM_tokPos, $2, $1, $3);}      
-|           sumop MINUS multop			{$$ = A_OpExp(EM_tokPos, $2, $1, $3);}
-|           multop
-;
-
-multop:     multop TIMES neg			{$$ = A_OpExp(EM_tokPos, $2, $1, $3);}
-|           multop DIVIDE neg			{$$ = A_OpExp(EM_tokPos, $2, $1, $3);}
-|           neg
-;
-
-neg:        MINUS term				{$$ = A_OpExp(EM_tokPos, A_IntExp(EM_tokPos, 0), $1, $2);}
-|           term
-;
-
-term:       INT					{$$ = A_IntExp(EM_tokPos, $1); }
-|           STRING				{$$ = A_StringExp(EM_tokPos, $1);}
-|           lvalue
-|           NIL					{$$ = A_NilExp(EM_tokPos); }
-|           expseq                  // also counts for (exp)
-|           ID LPAREN RPAREN
-|           ID LPAREN args RPAREN
-|           LPAREN RPAREN           // empty expression
-;
+tyfields1: ID COLON ID                 
+        |  ID COLON ID COMMA tyfields1 
