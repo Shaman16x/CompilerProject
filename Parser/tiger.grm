@@ -22,6 +22,17 @@ void yyerror(char *s)
     string sval;
 
     A_exp exp;
+    A_exp term;
+    A_decList_ decs;
+    A_expList_ expseq;
+    A_expList_ expseq1
+    A_expList_ args;
+    A_expList_ args1;
+
+    A_efieldList recfields;
+    A_efieldList recfields1;
+    A_fieldList_ tyfields;
+    A_fieldList_ tyfields1;
 }
 
 
@@ -30,6 +41,18 @@ void yyerror(char *s)
 %token <sval> STRING
 
 %type <exp> exp
+%type <term> term
+
+%type <decs> decs
+%type <expseq> expseq
+%type <expseq> expseq1
+%type <args> args
+%type <args> args1
+%type <tyfields> tyfields
+%type <tyfields> tyfields1
+
+%type <recfields> recfields
+%type <recfields> recfields1
 
 %token 
   COMMA COLON SEMICOLON LPAREN RPAREN LBRACK RBRACK 
@@ -73,17 +96,17 @@ exp:       term                             {$$ = A_ExpList(EM_tokPos, $1, NULL)
         |  ID LPAREN args RPAREN            {$$ = A_CallExp(EM_tokPos, $1, $3);}
         |  ID LBRACE recfields RBRACE       {$$ = A_RecordExp(EM_tokPos, $1, $3);}
         |  ID LBRACK exp RBRACK OF exp      {$$ = A_ArrayExp(EM_tokPos, $3, $6);}
-        |  exp TIMES exp                    {$$ = A_OpExp(EM_tokPos, $2, $1, $3);}
-        |  exp DIVIDE exp                   {$$ = A_OpExp(EM_tokPos, $2, $1, $3);}
-        |  exp PLUS exp                     {$$ = A_OpExp(EM_tokPos, $2, $1, $3);} 
-        |  exp MINUS exp                    {$$ = A_OpExp(EM_tokPos, $2, $1, $3);}
-        |  exp EQ exp                       {$$ = A_OpExp(EM_tokPos, $2, $1, $3);}
-        |  exp NEQ exp                      {$$ = A_OpExp(EM_tokPos, $2, $1, $3);}
-        |  exp LT exp                       {$$ = A_OpExp(EM_tokPos, $2, $1, $3);}
-        |  exp LE exp                       {$$ = A_OpExp(EM_tokPos, $2, $1, $3);}
-        |  exp GT exp                       {$$ = A_OpExp(EM_tokPos, $2, $1, $3);}
-        |  exp GE exp                       {$$ = A_OpExp(EM_tokPos, $2, $1, $3);}
-        |  exp OR exp                       {$$ = A_OpExp(EM_tokPos, $2, $1, $3);}
+        |  exp TIMES exp                    {$$ = A_OpExp(EM_tokPos, A_timesOp, $1, $3);}
+        |  exp DIVIDE exp                   {$$ = A_OpExp(EM_tokPos, A_divideOp, $1, $3);}
+        |  exp PLUS exp                     {$$ = A_OpExp(EM_tokPos, A_plusOp, $1, $3);} 
+        |  exp MINUS exp                    {$$ = A_OpExp(EM_tokPos, A_minusOp, $1, $3);}
+        |  exp EQ exp                       {$$ = A_OpExp(EM_tokPos, A_eqOp, $1, $3);}
+        |  exp NEQ exp                      {$$ = A_OpExp(EM_tokPos, A_neqOp, $1, $3);}
+        |  exp LT exp                       {$$ = A_OpExp(EM_tokPos, A_ltOp, $1, $3);}
+        |  exp LE exp                       {$$ = A_OpExp(EM_tokPos, A_leOp, $1, $3);}
+        |  exp GT exp                       {$$ = A_OpExp(EM_tokPos, A_gtOp, $1, $3);}
+        |  exp GE exp                       {$$ = A_OpExp(EM_tokPos, A_geOp, $1, $3);}
+        |  exp OR exp                       {$$ = A_OpExp(EM_tokPos, $2, $1, $3);}          // wrong, use ifExp?
         |  exp AND exp                      {$$ = A_IfExp(EM_tokPos, $1, $3, A_IntExp(EM_tokPos, 0));}
         |  lvalue ASSIGN exp                {$$ = A_AssignExp(EM_tokPos, $1, $3);}
 
