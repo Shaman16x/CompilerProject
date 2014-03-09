@@ -17,15 +17,19 @@ void yyerror(char *s)
 
 
 %union {
-  int pos;
-  int ival;
-  string sval;
+    int pos;
+    int ival;
+    string sval;
 
+    A_exp exp;
 }
+
 
 %token <sval> ID
 %token <ival> INT
 %token <sval> STRING
+
+%type <exp> exp
 
 %token 
   COMMA COLON SEMICOLON LPAREN RPAREN LBRACK RBRACK 
@@ -49,13 +53,13 @@ void yyerror(char *s)
 
 %%
 
-program:	exp									{$$ = $1;}
+program:	exp						        {absyn_root=$1;}
 
-term:      INT                        {$$ = A_IntExp(EM_tokPos, $1); }
-        |  STRING                     {$$ = A_StringExp(EM_tokPos, $1);}
-        |  lvalue                     {$$ = A_VarExp(EM_tokPos, $1);}
-        |  LPAREN expseq RPAREN       {$$ = $2;}
-        |  MINUS exp                  {$$ = A_OpExp(EM_tokPos, A_IntExp(EM_tokPos, 0), $1, $2);}
+term:      INT                              {$$ = A_IntExp(EM_tokPos, $1); }
+        |  STRING                           {$$ = A_StringExp(EM_tokPos, $1);}
+        |  lvalue                           {$$ = A_VarExp(EM_tokPos, $1);}
+        |  LPAREN expseq RPAREN             {$$ = $2;}
+        |  MINUS exp                        {$$ = A_OpExp(EM_tokPos, A_IntExp(EM_tokPos, 0), $1, $2);}
 
 
 exp:       term                             {$$ = A_ExpList(EM_tokPos, $1, NULL); }
