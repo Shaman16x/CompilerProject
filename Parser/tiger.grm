@@ -23,19 +23,19 @@ void yyerror(char *s)
 
     A_exp exp;
     A_exp term;
-    A_var_ lvalue;
+    A_var lvalue;
     A_ty        ty;
 
     A_dec       vardec;
     A_dec       typedec;
     A_dec       funcdec;
 
-    A_decList_  decs;
-    A_expList_  expseq;
-    A_expList_  args;
+    A_decList  decs;
+    A_expList expseq;
+    A_expList  args;
 
     A_efieldList recfields;
-    A_fieldList_ tyfields;
+    A_fieldList tyfields;
 }
 
 
@@ -91,7 +91,7 @@ term:      INT                              {$$ = A_IntExp(EM_tokPos, $1); }
         |  STRING                           {$$ = A_StringExp(EM_tokPos, $1);}
         |  lvalue                           {$$ = A_VarExp(EM_tokPos, $1);}
         |  LPAREN expseq RPAREN             {$$ = $2;}
-        |  MINUS exp                        {$$ = A_OpExp(EM_tokPos, A_IntExp(EM_tokPos, 0), A_minusOp, $2);}
+        |  MINUS exp                        {$$ = A_OpExp(EM_tokPos, A_minusOp, A_IntExp(EM_tokPos, 0),  $2);}
 
 
 exp:       term                             {$$ = A_ExpList(EM_tokPos, $1, NULL); }
@@ -115,8 +115,14 @@ exp:       term                             {$$ = A_ExpList(EM_tokPos, $1, NULL)
         |  exp LE exp                       {$$ = A_OpExp(EM_tokPos, A_leOp, $1, $3);}
         |  exp GT exp                       {$$ = A_OpExp(EM_tokPos, A_gtOp, $1, $3);}
         |  exp GE exp                       {$$ = A_OpExp(EM_tokPos, A_geOp, $1, $3);}
-        |  exp OR exp                       {$$ = A_OpExp(EM_tokPos, $2, $1, $3);}          // wrong, use ifExp?
-        |  exp AND exp                      {$$ = A_IfExp(EM_tokPos, $1, $3, A_IntExp(EM_tokPos, 0));}
+        |  exp OR exp                       {$$ = A_OpExp(EM_tokPos, A_plusOp,
+                                                                     A_OpExp(EM_tokPos, A_neqOp, 0, $1),
+                                                                     A_OpExp(EM_tokPos, A_neqOp, 0, $3));}
+                                                                     // (a==0) + (b==0) => a || b
+        |  exp AND exp                      {$$ = A_OpExp(EM_tokPos, A_timesOp,
+                                                                     A_OpExp(EM_tokPos, A_neqOp, 0, $1),
+                                                                     A_OpExp(EM_tokPos, A_neqOp, 0, $3));}
+                                                                     // (a==0) * (b==0) => a && b
         |  lvalue ASSIGN exp                {$$ = A_AssignExp(EM_tokPos, $1, $3);}
 
 expseq: /*empty*/                      
