@@ -17,7 +17,7 @@ int yyleng; extern unsigned char yytext[];
 int yymorfg;
 extern unsigned char *yysptr, yysbuf[];
 int yytchar;
-FILE *yyin = (FILE *) NULL; *yyout = (FILE *)NULL;
+FILE *yyin = NULL, *yyout = NULL;
 extern int yylineno;
 struct yysvf { 
 	struct yywork *yystoff;

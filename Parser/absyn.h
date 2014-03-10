@@ -66,7 +66,7 @@ struct A_dec_
     {enum {A_functionDec, A_varDec, A_typeDec} kind;
      A_pos pos;
      union {A_fundecList function;
-	    /* escape may change after the initial declaration */
+ 	    /* escape may change after the initial declaration */
 	    struct {S_symbol var; S_symbol typ; A_exp init; bool escape;} var;
 	    A_nametyList type;
 	  } u;
@@ -133,3 +133,58 @@ A_namety A_Namety(S_symbol name, A_ty ty);
 A_nametyList A_NametyList(A_namety head, A_nametyList tail);
 A_efield A_Efield(S_symbol name, A_exp exp);
 A_efieldList A_EfieldList(A_efield head, A_efieldList tail);
+
+
+/*************************************
+ print routines
+*************************************/ 
+void print_S_symbol(S_symbol s);
+
+void print_absyn_exp(A_exp exp, int indent);
+void print_absyn_var(A_var var, int indent);
+void print_absyn_dec(A_dec dec, int indent);
+void print_absyn_ty(A_ty, int indent);
+
+
+void print_SimpleVar(A_var var, int indent);
+void print_FieldVar(A_var var, int indent);
+void print_SubscriptVar(A_var var, int indent);
+
+void print_VarExp(A_exp exp, int indent);
+void print_NilExp(A_exp exp, int indent);
+void print_IntExp(A_exp exp, int indent);
+void print_StringExp(A_exp exp, int indent);
+void print_CallExp(A_exp exp, int indent);
+void print_OpExp(A_exp exp, int indent);
+void print_RecordExp(A_exp exp, int indent);
+void print_SeqExp(A_exp exp, int indent);
+void print_AssignExp(A_exp exp, int indent);
+void print_IfExp(A_exp exp, int indent);
+void print_WhileExp(A_exp exp, int indent);
+void print_ForExp(A_exp exp, int indent);
+void print_BreakExp(A_exp exp, int indent);
+void print_LetExp(A_exp exp, int indent);
+void print_ArrayExp(A_exp exp, int indent);
+
+void print_FunctionDec(A_dec dec, int indent);
+void print_VarDec(A_dec dec, int indent);
+void print_TypeDec(A_dec dec, int indent);
+
+void print_NameTy(A_ty ty, int indent);
+void print_RecordTy(A_ty ty, int indent);
+void print_ArrayTy(A_ty ty, int indent);
+
+void print_Field(A_field field, int indent);
+void print_Fundec(A_fundec fundec, int indent);
+void print_Namety(A_namety namety, int indent);
+void print_Efield(A_efield efield, int indent);
+
+void print_EfieldList(A_efieldList efieldList, int indent);
+void print_FieldList(A_fieldList fieldList, int indent);
+void print_ExpList(A_expList expList, int indent);
+void print_NametyList(A_nametyList nametyList, int indent);
+void print_FundecList(A_fundecList fundecList, int indent);
+void print_DecList(A_decList decList, int indent);
+
+void print_indent(int indent);
+void print_end(); 
