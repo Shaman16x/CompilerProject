@@ -1,6 +1,6 @@
 CSCI 5161
 Compiler Project
-PA2: Parser
+PA3: AST
 
 Student 1:
 Name:   Kyle Michaels
@@ -18,10 +18,10 @@ tiger.grm
 
 Description
 ------------------------------------------------------------------------
-This part of the compiler is used to parse a given file according
-to the grammar of the tiger language.
+This part of the compiler is a continuation of the parser. It now 
+incorporates actions to build an Abstract Syntax Tree (AST.)
 
-To compile tiger.grm, place it in the PA2 folder (Parser) and run the 
+To compile tiger.grm, place it in the PA3 folder (Parser) and run the 
 make command
 
 Required Software:
@@ -29,24 +29,15 @@ yacc or bison
 
 Notes/Features
 ------------------------------------------------------------------------
-Currently, this parser does not generate any conflicts.
+Currently, this parser does not generate any conflicts, though it does
+add an extraneous label for TypeDec and FunctionDec in the declarations.
+This was felt to not necessarily be an error.
 
-This grammer trys to follow the grammer definitions of the book as close
-as possible.  However, some liberties were taken to resolve conflicts,
-precedence, and parse issues.
+The not-so-obvious actions taken by certain rules are the use of A_IfExp()
+for OR and AND expressions.
 
-Noticible, expressions are defined in a chain of rules with a set
-precedence.
-For example, boolean lead to comparison ops (low to higher precedence).
+In the OR expression, the second expression is evaluated only if the first
+expression evaluates to FALSE.
 
-The bottom of this chain is comprised of literals, lvalue, function
-calls, and expression sequence.
-
-To resolve the conflict between lvalues and array declaration, we made
-the lvalue grammar recurse on the right side instead of the left.
-Part of this solution was inspired by the dialog on page 84 of the
-compiler book.
-
-The parser handles dangling ELSE clauses by assigning a right 
-association to the production and a left association to IF and THEN.
-
+Similarly, the second expression of the AND expression is not evaluated if
+the first expression evaluates to FALSE.
