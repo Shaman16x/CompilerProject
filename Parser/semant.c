@@ -79,6 +79,21 @@ static struct expty transExp(S_table venv, S_table tenv, A_exp a)
 			
 		}
 		
+		case A_letExp:
+		{
+			struct expty exp;
+			A_decList d;
+			Tr_expList list = Tr_ExpList();
+			S_beginScope(venv);
+			S_beginScope(tenv);
+			for (d = a->u.let.decs; d; d = d->tail)
+				transDec(venv, tenv, d->head));
+			exp = transExp(venv, tenv, a->u.let.body);
+			Tr_ExpList_prepend(list, expr.exp); // need result of let at the beginning
+			S_endScope(venv);
+			S_endScope(tenv);
+			return exp;
+		}
 		
 	}
 	assert(0);
