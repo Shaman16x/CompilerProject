@@ -18,36 +18,7 @@ static struct expty transExp(S_table venv, S_table tenv, A_exp a)
 {
 	switch (a->kind) {
 		
-		case A_callExp:
-		{
-			A_expList args = NULL;
-			Ty_tyList formals;
-			E_enventry x = S_look(venv, a->u.call.func);
-			Tr_exp translation = Tr_noExp();
-			Tr_expList argList = Tr_ExpList();
-			if (x && x->kind == E_funEntry) {
-				// check type of formals
-				formals = x->u.fun.formals;
-				for (args = a->u.call.args; args && formals;
-						args = args->tail, formals = formals->tail) {
-					struct expty arg = transExp(level, venv, tenv, breakk, args->head);
-					if (!is_equal_ty(arg.ty, formals->head))
-						EM_error(args->head->pos, "incorrect type %s; expected %s",
-							Ty_ToString(arg.ty), Ty_ToString(formals->head));
-					Tr_ExpList_append(argList, arg.exp);
-				}
-				/* Check we have the same number of arguments and formals */
-				if (args == NULL && formals != NULL)
-					EM_error(a->pos, "not enough arguments");
-				else if (args != NULL && formals == NULL)
-					EM_error(a->pos, "too many arguments");
-				translation = Tr_callExp(level, x->u.fun.level, x->u.fun.label, argList);
-				return expTy(translation, actual_ty(x->u.fun.result));
-			} else {
-				EM_error(a->pos, "undefined function %s", S_name(a->u.call.func));
-				return expTy(translation, Ty_Int());
-			}
-		}
+		
 		case A_opExp:{
 			A_oper oper = a->u.op.oper;
 			struct expty left = transExp(level, venv, tenv, breakk, a->u.op.left);
