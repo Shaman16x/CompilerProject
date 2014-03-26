@@ -2,6 +2,24 @@
 
 // implementation based off of suggestions in the book
 
+// ****************************************************
+E_enventry E_VarEntry (Ty_ty ty)
+{
+    E_enventry e;
+    e.kind = E_varEntry;
+    e.ty = ty;
+    return &e;
+}
+E_enventry E_FunEntry (Ty_tyList formals, Ty_ty result)
+{
+    E_enventry e;
+    e.kind = E_funEntry;
+    e.result = result;
+    e.formals = formals;
+    return &e;
+}
+// ****************************************************
+
 expty expTy(Tr_exp exp, Ty_ty ty){
     expty e; e.exp=exp; e.ty=ty; return e;
 }
@@ -207,6 +225,17 @@ expty   transExp(S_table venv, S_table tenv, A_exp a) {
 
 void    transDec(S_table venv, S_table tenv, A_dec d)
 {
+    switch(d->kind) {
+        case A_varDec: {
+            expty e = transExp(venv, tenv, d->u.var.init);
+            S_enter(venv, d->u.var.var, E_VarEntry(e.ty));
+        }
+        case A_typeDec:
+        case A_functionDec:
+            break;
+        default:
+            printf("Thats not a correct kind of declaration");
+    }
 }
 
 Ty_ty   transTy (              S_table tenv, A_ty a)
