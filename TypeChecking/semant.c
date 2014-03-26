@@ -6,10 +6,12 @@ expty expTy(Tr_exp exp, Ty_ty ty){
     expty e; e.exp=exp; e.ty=ty; return e;
 }
 
+
 // translates expressions
 expty   transExp(S_table venv, S_table tenv, A_exp a) {
     switch (a->kind) {
         case A_varExp:
+            //return transVar(venv, tenv, a->var);
         case A_nilExp:
             // not sure about this one
             return expTy(NULL, Ty_Nil());
@@ -21,6 +23,7 @@ expty   transExp(S_table venv, S_table tenv, A_exp a) {
             return expTy(NULL, Ty_String());
             break;
         case A_callExp:
+            // function
         case A_opExp: {
             A_oper oper = a->u.op.oper;
             expty left = transExp(venv, tenv, a->u.op.left);
@@ -32,8 +35,57 @@ expty   transExp(S_table venv, S_table tenv, A_exp a) {
                     if (right.ty->kind != Ty_int)
                         EM_error(a->u.op.right->pos, "Integer required");
                     return expTy(NULL, Ty_Int());
+                case A_minusOp:
+                    if (left.ty->kind != Ty_int)
+                        EM_error(a->u.op.left->pos, "Integer required");
+                    if (right.ty->kind != Ty_int)
+                        EM_error(a->u.op.right->pos, "Integer required");
+                    return expTy(NULL, Ty_Int());
+                case A_timesOp:
+                    if (left.ty->kind != Ty_int)
+                        EM_error(a->u.op.left->pos, "Integer required");
+                    if (right.ty->kind != Ty_int)
+                        EM_error(a->u.op.right->pos, "Integer required");
+                    return expTy(NULL, Ty_Int());
+                case A_divideOp:
+                    if (left.ty->kind != Ty_int)
+                        EM_error(a->u.op.left->pos, "Integer required");
+                    if (right.ty->kind != Ty_int)
+                        EM_error(a->u.op.right->pos, "Integer required");
+                    return expTy(NULL, Ty_Int());
+                case A_eqOp:
+                    // this is special, can be used on records and arrays
+                    return expTy(NULL, Ty_Int());
+                case A_neqOp:
+                    // this is special, can be used on records and arrays
+                    return expTy(NULL, Ty_Int());
+                case A_ltOp:
+                    if (left.ty->kind != Ty_int)
+                        EM_error(a->u.op.left->pos, "Integer required");
+                    if (right.ty->kind != Ty_int)
+                        EM_error(a->u.op.right->pos, "Integer required");
+                    return expTy(NULL, Ty_Int());
+                case A_leOp:
+                    if (left.ty->kind != Ty_int)
+                        EM_error(a->u.op.left->pos, "Integer required");
+                    if (right.ty->kind != Ty_int)
+                        EM_error(a->u.op.right->pos, "Integer required");
+                    return expTy(NULL, Ty_Int());
+                case A_gtOp:
+                    if (left.ty->kind != Ty_int)
+                        EM_error(a->u.op.left->pos, "Integer required");
+                    if (right.ty->kind != Ty_int)
+                        EM_error(a->u.op.right->pos, "Integer required");
+                    return expTy(NULL, Ty_Int());
+                case A_geOp:
+                    if (left.ty->kind != Ty_int)
+                        EM_error(a->u.op.left->pos, "Integer required");
+                    if (right.ty->kind != Ty_int)
+                        EM_error(a->u.op.right->pos, "Integer required");
+                    return expTy(NULL, Ty_Int());
                 default:
                     printf("this is an unhandled operation!\n");
+                
             }
             // requires a lot of work
             }
@@ -50,6 +102,9 @@ expty   transExp(S_table venv, S_table tenv, A_exp a) {
             printf("what IS this?\n");
     }
 }
+
+//void    transDec(S_table venv, S_table tenv, A_dec d);
+//Ty_ty   transTy (              S_table tenv, A_ty a);
 
 void SEM_transProg(A_exp exp)  {
     expty tree;
