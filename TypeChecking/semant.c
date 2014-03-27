@@ -79,10 +79,44 @@ expty   transExp(S_table venv, S_table tenv, A_exp a) {
                         EM_error(a->u.op.right->pos, "Integer required");
                     return expTy(NULL, Ty_Int());
                 case A_eqOp:
-                    // this is special, can be used on records and arrays
+                    switch (left.ty->kind){
+						case Ty_int:
+							if(right.ty->kind != Ty_int)
+								EM_error(a->u.op.right->pos, "Integer required");
+							break;
+						case Ty_string:
+							if(right.ty->kind != Ty_string)
+								EM_error(a->u.op.right->pos, "string required");
+							break;
+						case Ty_array:
+							if(right.ty->kind != Ty_array)
+								EM_error(a->u.op.right->pos, "array required");
+							break;
+						case Ty_record:
+							if(right.ty->kind != Ty_record || right.ty->kind != Ty_nil)
+								EM_error(a->u.op.right->pos, "record required");
+							break;
+					}
                     return expTy(NULL, Ty_Int());
                 case A_neqOp:
-                    // this is special, can be used on records and arrays
+                    switch (left.ty->kind){
+						case Ty_int:
+							if(right.ty->kind != Ty_int)
+								EM_error(a->u.op.right->pos, "Integer required");
+							break;
+						case Ty_string:
+							if(right.ty->kind != Ty_string)
+								EM_error(a->u.op.right->pos, "string required");
+							break;
+						case Ty_array:
+							if(right.ty->kind != Ty_array)
+								EM_error(a->u.op.right->pos, "array required");
+							 break;
+						case Ty_record:
+							if(right.ty->kind != Ty_record || right.ty->kind != Ty_nil)
+								EM_error(a->u.op.right->pos, "record required");
+							break;
+					}
                     return expTy(NULL, Ty_Int());
                 case A_ltOp:
                     if (left.ty->kind != Ty_int)
