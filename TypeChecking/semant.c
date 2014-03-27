@@ -337,8 +337,18 @@ expty   transExp(S_table venv, S_table tenv, A_exp a) {
             return exp;
         }
         
-        case A_arrayExp:
-            break;
+        case A_arrayExp:{
+	        E_enventry e = S_look(tenv, a->u.array.typ);
+		expty size = transExp(venv, tenv, a->u.array.size);
+		expty init = transExp(venv, tenv, a->u.array.init);
+		
+		if (e && e->kind != init.ty->kind)
+			EM_error(a->u.forr.body->pos, "mismatch of array type and init type");
+					
+		if (size.ty->kind != Ty_int)
+			EM_error(a->u.forr.body->pos, "size must be an integer");
+			
+	            break;
         default:
             printf("what IS this?\n");
     }
