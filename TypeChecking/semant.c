@@ -347,7 +347,7 @@ expty   transExp(S_table venv, S_table tenv, A_exp a) {
 					
 		if (size.ty->kind != Ty_int)
 			EM_error(a->u.forr.body->pos, "size must be an integer");
-			
+        }
 	            break;
         default:
             printf("what IS this?\n");
