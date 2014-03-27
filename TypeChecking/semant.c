@@ -104,8 +104,37 @@ expty   transExp(S_table venv, S_table tenv, A_exp a) {
             return expTy(NULL, Ty_String());
             break;
         case A_callExp:
-            // TODO: this
-            // function
+           {
+           /* i'm not sure this is right. logically, it seems to be correct
+           	but i can't get it to fail a test. 
+           */
+	    expty arg;
+            // the list of args
+            A_expList arg_list = NULL;
+            // the list of types of the args
+            Ty_tyList formals;
+            E_enventry e = S_look(venv, a->u.call.func);
+            if (e && e->kind == E_funEntry){
+		formals = e->u.fun.formals;
+		// check the types of the formal args
+		for (arg_list = a->u.call.args; arg_list && formals; 
+					arg_list = arg_list->tail, formals = formals->tail){
+			arg = transExp(venv, tenv, arg_list->head);
+			if (arg.ty != formals->head)
+				EM_error(a->u.op.left->pos, "mismatch of types");
+		}
+		// when the for loop exits, we're at the end of at least 
+		// one of the lists: args or formals. if one is not null,
+		// then there is an incorrect number of arguments
+		if((arg_list == NULL && formals != NULL) || 
+			(formals == NULL && arg_list != NULL)){
+			EM_error(a->u.op.left->pos, "incorrect number of arguments");
+		}
+		return expTy(NULL, Ty_Int());
+		// check the return type
+	}
+            break;
+        } 
             break;
         case A_opExp: {
             A_oper oper = a->u.op.oper;
@@ -138,42 +167,42 @@ expty   transExp(S_table venv, S_table tenv, A_exp a) {
                     return expTy(NULL, Ty_Int());
                 case A_eqOp:
                     switch (left.ty->kind){
-						case Ty_int:
-							if(right.ty->kind != Ty_int)
-								EM_error(a->u.op.right->pos, "Integer required");
-							break;
-						case Ty_string:
-							if(right.ty->kind != Ty_string)
-								EM_error(a->u.op.right->pos, "string required");
-							break;
-						case Ty_array:
-							if(right.ty->kind != Ty_array)
-								EM_error(a->u.op.right->pos, "array required");
-							break;
-						case Ty_record:
-							if(right.ty->kind != Ty_record || right.ty->kind != Ty_nil)
-								EM_error(a->u.op.right->pos, "record required");
-							break;
+			case Ty_int:
+				if(right.ty->kind != Ty_int)
+					EM_error(a->u.op.right->pos, "Integer required");
+				break;
+			case Ty_string:
+				if(right.ty->kind != Ty_string)
+					EM_error(a->u.op.right->pos, "string required");
+				break;
+			case Ty_array:
+				if(right.ty->kind != Ty_array)
+					EM_error(a->u.op.right->pos, "array required");
+				break;
+			case Ty_record:
+				if(right.ty->kind != Ty_record || right.ty->kind != Ty_nil)
+					EM_error(a->u.op.right->pos, "record required");
+				break;
 					}
                     return expTy(NULL, Ty_Int());
                 case A_neqOp:
                     switch (left.ty->kind){
-						case Ty_int:
-							if(right.ty->kind != Ty_int)
-								EM_error(a->u.op.right->pos, "Integer required");
-							break;
-						case Ty_string:
-							if(right.ty->kind != Ty_string)
-								EM_error(a->u.op.right->pos, "string required");
-							break;
-						case Ty_array:
-							if(right.ty->kind != Ty_array)
-								EM_error(a->u.op.right->pos, "array required");
-							 break;
-						case Ty_record:
-							if(right.ty->kind != Ty_record || right.ty->kind != Ty_nil)
-								EM_error(a->u.op.right->pos, "record required");
-							break;
+			case Ty_int:
+				if(right.ty->kind != Ty_int)
+					EM_error(a->u.op.right->pos, "Integer required");
+				break;
+			case Ty_string:
+				if(right.ty->kind != Ty_string)
+					EM_error(a->u.op.right->pos, "string required");
+				break;
+			case Ty_array:
+				if(right.ty->kind != Ty_array)
+					EM_error(a->u.op.right->pos, "array required");
+				 break;
+			case Ty_record:
+				if(right.ty->kind != Ty_record || right.ty->kind != Ty_nil)
+					EM_error(a->u.op.right->pos, "record required");
+				break;
 					}
                     return expTy(NULL, Ty_Int());
                 case A_ltOp:
