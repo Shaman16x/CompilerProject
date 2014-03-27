@@ -18,7 +18,7 @@ Ty_ty   transTy (              S_table tenv, A_ty a);
 // env.h
 // *******************************************************
 // Eviroment stuff that we don't have for some reason
-typedef struct E_eventry_ *enventry;
+typedef struct E_enventry_ *E_enventry;
 
 struct E_enventry_ {enum {E_varEntry, E_funEntry} kind;
                     union {struct {Ty_ty ty;} var;
