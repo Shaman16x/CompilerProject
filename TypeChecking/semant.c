@@ -8,7 +8,7 @@ E_enventry E_VarEntry (Ty_ty ty)
     E_enventry e;
     e->kind = E_varEntry;
     e->u.var.ty = ty;
-    return &e;
+    return e;
 }
 E_enventry E_FunEntry (Ty_tyList formals, Ty_ty result)
 {
@@ -16,7 +16,7 @@ E_enventry E_FunEntry (Ty_tyList formals, Ty_ty result)
     e->kind = E_funEntry;
     e->u.fun.result = result;
     e->u.fun.formals = formals;
-    return &e;
+    return e;
 }
 // ****************************************************
 
@@ -26,6 +26,64 @@ expty expTy(Tr_exp exp, Ty_ty ty){
 
 expty   transVar(S_table venv, S_table tenv, A_var v)
 {
+    switch(v->kind){
+        case A_simpleVar:{
+            E_enventry x = S_look(venv, v->u.simple);
+            if (x && x->kind == E_varEntry)
+                return expTy(NULL, x->u.var.ty);    // TODO: get the "actual type" as opposed to a Name type
+            else {
+                EM_error(v->pos, "undefined variable %s", S_name(v->u.simple));
+                return expTy(NULL, Ty_Int());   // default type
+            }
+        }
+        
+        // handle record accesses
+        case A_fieldVar: {
+            expty rec = transVar(venv, tenv, v->u.field.var);
+            Ty_fieldList f;
+            
+            // check that this var is a record
+            if (rec.ty->kind == Ty_record) {
+                for (f = rec.ty->u.record; f; f=f->tail){  // TODO: better accessors?
+                    if(f->head->name == v->u.field.sym) {     // check for matching symbol
+                        return expTy(NULL, f->head->ty);    // TODO: get true type?
+                    }
+                }
+                // could not find the record
+                EM_error(v->pos, "Field %s was not in record", S_name(v->u.field.sym));
+                return expTy(NULL, Ty_Int());   // default type
+            }
+            else {
+                EM_error(v->pos, "Not a record");
+                return expTy(NULL, Ty_Int());   // default type
+            }
+        }
+        
+        // handle array accesses
+        case A_subscriptVar: {
+            expty arr = transVar(venv, tenv, v->u.subscript.var);
+            expty e =   transExp(venv, tenv, v->u.subscript.exp);
+            
+            // check that this var is an array
+            if (arr.ty->kind == Ty_array) {
+                if(e.ty->kind == Ty_int){
+                    return expTy(NULL, arr.ty->u.array);    // return the array's type
+                }
+                else {
+                    EM_error(v->u.subscript.exp->pos, "Integer required");
+                    return expTy(NULL, Ty_Int());   // default type
+                }
+            }
+            else {
+                EM_error(v->pos, "Not an array");
+                return expTy(NULL, Ty_Int());   // default type
+            }
+        }
+        
+        default:
+            printf("What IS this?...variable\n");
+    }
+    
     return expTy(NULL, Ty_Void());
 }
 
