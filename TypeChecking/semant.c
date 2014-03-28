@@ -354,7 +354,7 @@ expty   transExp(S_table venv, S_table tenv, A_exp a) {
             return expTy(NULL, Ty_Void());
             break;
             
-        case A_letExp: {
+        case A_letExp: {    // copied from the book's implementation
             A_decList d;
             expty exp;
             
@@ -362,7 +362,7 @@ expty   transExp(S_table venv, S_table tenv, A_exp a) {
             S_beginScope(tenv);
             for(d = a->u.let.decs; d; d=d->tail)
                 transDec(venv, tenv, d->head);
-            exp = transExp(venv, tenv, a->u.let.body);     // type of sequence is that of the last expression
+            exp = transExp(venv, tenv, a->u.let.body);
             S_endScope(tenv);
             S_endScope(venv);
             return exp;
@@ -372,12 +372,15 @@ expty   transExp(S_table venv, S_table tenv, A_exp a) {
             E_enventry e = S_look(tenv, a->u.array.typ);
             expty size = transExp(venv, tenv, a->u.array.size);
             expty init = transExp(venv, tenv, a->u.array.init);
-            
-            if (e && e->kind != init.ty->kind)
-                EM_error(a->u.forr.body->pos, "mismatch of array type and init type");
-                        
+
+            if (!e->u.var.ty)
+                EM_error(a->pos, "Array Type is undeclared");
+            else if (e->u.var.ty != init.ty)
+                EM_error(a->u.array.size->pos, "mismatch of array type and init type"); // TODO: fix these
             if (size.ty->kind != Ty_int)
-                EM_error(a->u.forr.body->pos, "size must be an integer");
+                EM_error(a->u.array.size->pos, "size must be an integer");
+                
+            return expTy(NULL, Ty_Array(e->u.var.ty));
             }
             break;
         default:
@@ -395,14 +398,19 @@ void    transDec(S_table venv, S_table tenv, A_dec d)
             // check that type and initial value match
             if(d->u.var.typ != NULL){
                 type = S_look(tenv, d->u.var.typ);      // look for type's existence
-                if (type == NULL)
-                    EM_error(d->pos, "Type is undeclared");
-                else if(type != e.ty)
+                if (type == NULL) {
+                    EM_error(d->pos, "Variable Type is undeclared, defaulting to int");
+                    type = Ty_Int();
+                }
+                else if (type->kind == Ty_array) {  // handle array types
+                    // TODO: proper array type checking
+                }
+                else if(type != e.ty)       // basic type check
                     EM_error(d->u.var.init->pos, "value does not match the variable's type");
                 S_enter(venv, d->u.var.var, E_VarEntry(type));
             }
             else
-                S_enter(venv, d->u.var.var, E_VarEntry(e.ty));
+                S_enter(venv, d->u.var.var, E_VarEntry(e.ty)); 
         }
             break;
         case A_typeDec: {       // TODO: need to "generalize" these, see book
@@ -410,11 +418,42 @@ void    transDec(S_table venv, S_table tenv, A_dec d)
             for(l = d->u.type; l; l=l->tail)
                 S_enter(tenv, l->head->name, transTy(tenv, l->head->ty));
         }
-        case A_functionDec:
+        case A_functionDec: {// TODO: type checking?
+            A_fundec f = d->u.function->head;
+            Ty_ty resultTy = S_look(tenv, f->result);
+            Ty_tyList formalTys = makeFormalTyList(tenv, f->params);
+            S_enter(venv, f->name, E_FunEntry(formalTys, resultTy));
+            S_beginScope(venv);
+            {A_fieldList l; Ty_tyList t;
+                for(l=f->params, t=formalTys; l; l=l->tail, t=t->tail)
+                    S_enter(venv, l->head->name, E_VarEntry(t->head));
+            }
+            transExp(venv, tenv, f->body);
+            S_endScope(venv);
             break;
+        }
+
         default:
             printf("Thats not a correct kind of declaration");
     }
+}
+
+Ty_tyList makeFormalTyList(S_table tenv, A_fieldList params){
+    A_fieldList f;
+    Ty_tyList t = NULL;
+    Ty_tyList s = NULL;
+    
+    // get all the types, produces reversed list
+    for(f=params; f; f=f->tail){
+        t = Ty_TyList(S_look(tenv, f->head->typ), t);
+    }
+    
+    // put the list in the proper order
+    for(t; t; t=t->tail){
+        s = Ty_TyList(t->head, s);
+    }
+    
+    return s;
 }
 
 Ty_ty   transTy (              S_table tenv, A_ty a)
@@ -426,8 +465,11 @@ Ty_ty   transTy (              S_table tenv, A_ty a)
             t = S_look(tenv, a->u.name);
             break;
         case A_recordTy:
+            // TODO: something with records
+            printf("record types are not handled yet");
+            break;
         case A_arrayTy:
-            printf("well this is awkward...\n");
+            t = Ty_Array(S_look(tenv, a->u.array));
             break;
         default:
             printf("no kind?\n");

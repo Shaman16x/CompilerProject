@@ -16,6 +16,8 @@ expty   transExp(S_table venv, S_table tenv, A_exp a);
 void    transDec(S_table venv, S_table tenv, A_dec d);
 Ty_ty   transTy (              S_table tenv, A_ty a);
 
+Ty_tyList makeFormalTyList(S_table tenv, A_fieldList params);    // makes a list of type based on params
+
 // env.h
 // *******************************************************
 // Eviroment stuff that we don't have for some reason
