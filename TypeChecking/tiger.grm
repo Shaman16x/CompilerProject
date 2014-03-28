@@ -96,7 +96,7 @@ term:      INT                              {$$ = A_IntExp(EM_tokPos, $1); }
 
 exp:       term                             {$$ = $1; }
         |  NIL                              {$$ = A_NilExp(EM_tokPos); }
-        |  IF exp THEN exp                  {$$ = A_IfExp(EM_tokPos, $2, $4, A_NilExp(EM_tokPos));} 
+        |  IF exp THEN exp                  {$$ = A_IfExp(EM_tokPos, $2, $4, NULL);} 
         |  IF exp THEN exp ELSE exp         {$$ = A_IfExp(EM_tokPos, $2, $4, $6);}
         |  WHILE exp DO exp                 {$$ = A_WhileExp(EM_tokPos, $2, $4);}
         |  FOR ID ASSIGN exp TO exp DO exp  {$$ = A_ForExp(EM_tokPos, S_Symbol($2), $4, $6, $8);}         
