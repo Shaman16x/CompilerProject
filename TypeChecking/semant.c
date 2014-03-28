@@ -281,7 +281,7 @@ expty   transExp(S_table venv, S_table tenv, A_exp a) {
             A_efieldList ef;
             Ty_fieldList f = NULL, g = NULL;
             Ty_ty recType;
-            
+            /*
             // convert efields into Ty_Fields
             for(ef=a->u.record.fields; ef; ef=ef->tail){
                 exp = transExp(venv, tenv, ef->head->exp);
@@ -291,8 +291,8 @@ expty   transExp(S_table venv, S_table tenv, A_exp a) {
                 g = Ty_FieldList(f->head, g);
 
             recType = Ty_Record(f);
-            
-            return expTy(NULL, recType);
+            */
+            return expTy(NULL, S_look(tenv, a->u.record.typ));
         }
             
         case A_seqExp: {
@@ -408,6 +408,8 @@ expty   transExp(S_table venv, S_table tenv, A_exp a) {
             printf("\n");
             if (!t)
                 EM_error(a->pos, "Array Type is undeclared");
+            else if (t->kind != Ty_array)
+                EM_error(a->pos, "Type is not an array");
             else if (t->u.array != init.ty)
                 EM_error(a->u.array.size->pos, "mismatch of array type and init type"); // TODO: fix these
             if (size.ty->kind != Ty_int)
@@ -437,13 +439,22 @@ void    transDec(S_table venv, S_table tenv, A_dec d)
                 }
                 else if (type->kind == Ty_array) {  // handle array types
                     // TODO: proper array type checking
-                    Ty_print(type);
-                    Ty_print(e.ty); 
                     if(actual_ty(type) != actual_ty(e.ty))
                         EM_error(d->u.var.init->pos, "Mismatch of array types");
                 }
                 else if (type->kind == Ty_record) {
+                    Ty_fieldList f, g;
                     // TODO: something something type checking
+                    if (actual_ty(type) != actual_ty(e.ty))
+                        EM_error(d->u.var.init->pos, "Mismatch of Record types");
+                    else if(e.ty->kind == Ty_nil){}
+                    else if (e.ty->kind == Ty_record){  // check that the initialization is correct
+                        printf("check the record\n");
+                        for(f = type->u.record, g = e.ty->u.record; f && g; f=f->tail, g=g->tail){
+                        }
+                    }
+                    else
+                        EM_error(d->u.var.init->pos, "initial value is not a record or nil");
                 }
                 else if(type != e.ty)       // basic type check
                     EM_error(d->u.var.init->pos, "value does not match the variable's type");
