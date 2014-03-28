@@ -22,9 +22,9 @@ int main(int argc, char **argv) {
  if (argc!=2) {fprintf(stderr,"usage: a.out filename\n"); exit(1);}
 #ifdef DISPLAY  
  print_absyn_exp(parse(argv[1]), 0);
- printf("\n");
 #else
  parse(argv[1]);
+ printf("\n");
 #endif
  return 0;
 }
