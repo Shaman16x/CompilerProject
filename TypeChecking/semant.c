@@ -119,7 +119,7 @@ expty   transVar(S_table venv, S_table tenv, A_var v)
 
 // translates expressions
 expty   transExp(S_table venv, S_table tenv, A_exp a) {
-    printf("transExp\n"); // DEBUG
+    printf("transExp: %d\n", a->kind); // DEBUG
     switch (a->kind) {
         case A_varExp:
             // translate variable
@@ -262,13 +262,28 @@ expty   transExp(S_table venv, S_table tenv, A_exp a) {
                     return expTy(NULL, Ty_Int());
                 default:
                     printf("this is an unhandled operation!\n");
-                
+                    break;
             }
             // requires a lot of work
         }
-        case A_recordExp:
-            // TODO: this
-            break;
+        case A_recordExp: {
+            expty exp;  // TODO: type checking
+            A_efieldList ef;
+            Ty_fieldList f = NULL, g = NULL;
+            Ty_ty recType;
+            
+            // convert efields into Ty_Fields
+            for(ef=a->u.record.fields; ef; ef=ef->tail){
+                exp = transExp(venv, tenv, ef->head->exp);
+                f = Ty_FieldList(Ty_Field(ef->head->name, exp.ty), f);
+            }
+            for(f; f; f=f->tail)    // put list in order
+                g = Ty_FieldList(f->head, g);
+
+            recType = Ty_Record(f);
+            
+            return expTy(NULL, recType);
+        }
             
         case A_seqExp: {
             A_expList e;
@@ -382,9 +397,9 @@ expty   transExp(S_table venv, S_table tenv, A_exp a) {
                 
             return expTy(NULL, Ty_Array(e->u.var.ty));
             }
-            break;
         default:
-            printf("what IS this?\n");
+            //printf("what IS this?\n");      // seems that there are hidden expessions?
+            return expTy(NULL, Ty_Void());
     }
 }
 
@@ -404,6 +419,9 @@ void    transDec(S_table venv, S_table tenv, A_dec d)
                 }
                 else if (type->kind == Ty_array) {  // handle array types
                     // TODO: proper array type checking
+                }
+                else if (type->kind == Ty_record) {
+                    // TODO: something something type checking
                 }
                 else if(type != e.ty)       // basic type check
                     EM_error(d->u.var.init->pos, "value does not match the variable's type");
@@ -464,10 +482,18 @@ Ty_ty   transTy (              S_table tenv, A_ty a)
         case A_nameTy:
             t = S_look(tenv, a->u.name);
             break;
-        case A_recordTy:
-            // TODO: something with records
-            printf("record types are not handled yet");
+        case A_recordTy: {
+            Ty_fieldList f = NULL;
+            Ty_fieldList g = NULL;
+            A_fieldList l;
+            
+            for(l = a->u.record; l; l=l->tail)  // create the field list
+                f= Ty_FieldList(Ty_Field(l->head->name, S_look(tenv, l->head->typ)), f);
+            for(f; f; f=f->tail)            // reorder list
+                g = Ty_FieldList(f->head, g);
+            t = Ty_Record(g); // TODO: is this the correct usage?
             break;
+        }
         case A_arrayTy:
             t = Ty_Array(S_look(tenv, a->u.array));
             break;
