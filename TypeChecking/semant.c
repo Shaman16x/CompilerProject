@@ -135,36 +135,40 @@ expty   transExp(S_table venv, S_table tenv, A_exp a) {
             return expTy(NULL, Ty_String());
             break;
         case A_callExp:
-           {
+        {
            /* i'm not sure this is right. logically, it seems to be correct
            	but i can't get it to fail a test. 
            */
-	    expty arg;
+            expty arg;
             // the list of args
             A_expList arg_list = NULL;
             // the list of types of the args
             Ty_tyList formals;
             E_enventry e = S_look(venv, a->u.call.func);
             if (e && e->kind == E_funEntry){
-        formals = e->u.fun.formals;
-        // check the types of the formal args
-        for (arg_list = a->u.call.args; arg_list && formals; 
-                    arg_list = arg_list->tail, formals = formals->tail){
-            arg = transExp(venv, tenv, arg_list->head);
-            if (arg.ty != formals->head)
-                EM_error(a->u.op.left->pos, "mismatch of types");
-        }
-        // when the for loop exits, we're at the end of at least 
-        // one of the lists: args or formals. if one is not null,
-        // then there is an incorrect number of arguments
-        if((arg_list == NULL && formals != NULL) || 
-            (formals == NULL && arg_list != NULL)){
-            EM_error(a->u.op.left->pos, "incorrect number of arguments");
-        }
-        return expTy(NULL, Ty_Int());
-        // check the return type
-    }
-            break;
+                formals = e->u.fun.formals;
+                // check the types of the formal args
+                for (arg_list = a->u.call.args; arg_list && formals; 
+                            arg_list = arg_list->tail, formals = formals->tail){
+                    arg = transExp(venv, tenv, arg_list->head);
+                    if (arg.ty != formals->head)
+                        EM_error(a->u.op.left->pos, "mismatch of types");
+                }
+                // when the for loop exits, we're at the end of at least 
+                // one of the lists: args or formals. if one is not null,
+                // then there is an incorrect number of arguments
+                if((arg_list == NULL && formals != NULL) || 
+                    (formals == NULL && arg_list != NULL)){
+                    EM_error(a->u.op.left->pos, "incorrect number of arguments");
+                }
+                return expTy(NULL, e->u.fun.result);
+                // check the return type
+            }
+            else {
+                EM_error(a->pos, "Function is undefined");
+                return expTy(NULL, Ty_Void());
+            }
+        break;
         } 
             break;
         case A_opExp: {
@@ -198,43 +202,49 @@ expty   transExp(S_table venv, S_table tenv, A_exp a) {
                     return expTy(NULL, Ty_Int());
                 case A_eqOp:
                     switch (left.ty->kind){
-                case Ty_int:
-                    if(right.ty->kind != Ty_int)
-                        EM_error(a->u.op.right->pos, "Integer required");
-                    break;
-                case Ty_string:
-                    if(right.ty->kind != Ty_string)
-                        EM_error(a->u.op.right->pos, "string required");
-                    break;
-                case Ty_array:
-                    if(right.ty->kind != Ty_array)
-                        EM_error(a->u.op.right->pos, "array required");
-                    break;
-                case Ty_record:
-                    if(right.ty->kind != Ty_record || right.ty->kind != Ty_nil)
-                        EM_error(a->u.op.right->pos, "record required");
-                    break;
-                        }
+                    case Ty_int:
+                        if(right.ty->kind != Ty_int)
+                            EM_error(a->u.op.right->pos, "Integer required");
+                        break;
+                    case Ty_string:
+                        if(right.ty->kind != Ty_string)
+                            EM_error(a->u.op.right->pos, "string required");
+                        break;
+                    case Ty_array:
+                        if(right.ty->kind != Ty_array)
+                            EM_error(a->u.op.right->pos, "array required");
+                        break;
+                    case Ty_record:
+                    case Ty_nil:
+                        if(right.ty->kind != Ty_record || right.ty->kind != Ty_nil)
+                            EM_error(a->u.op.right->pos, "record required");
+                        break;
+                    default:
+                        EM_error(a->u.op.left->pos, "Not a comparable type");
+                    }
                     return expTy(NULL, Ty_Int());
                 case A_neqOp:
                     switch (left.ty->kind){
-                case Ty_int:
-                    if(right.ty->kind != Ty_int)
-                        EM_error(a->u.op.right->pos, "Integer required");
-                    break;
-                case Ty_string:
-                    if(right.ty->kind != Ty_string)
-                        EM_error(a->u.op.right->pos, "string required");
-                    break;
-                case Ty_array:
-                    if(right.ty->kind != Ty_array)
-                        EM_error(a->u.op.right->pos, "array required");
-                     break;
-                case Ty_record:
-                    if(right.ty->kind != Ty_record || right.ty->kind != Ty_nil)
-                        EM_error(a->u.op.right->pos, "record required");
-                    break;
-                        }
+                    case Ty_int:
+                        if(right.ty->kind != Ty_int)
+                            EM_error(a->u.op.right->pos, "Integer required");
+                        break;
+                    case Ty_string:
+                        if(right.ty->kind != Ty_string)
+                            EM_error(a->u.op.right->pos, "string required");
+                        break;
+                    case Ty_array:
+                        if(right.ty->kind != Ty_array)
+                            EM_error(a->u.op.right->pos, "array required");
+                         break;
+                    case Ty_record:
+                    case Ty_nil:
+                        if(right.ty->kind != Ty_record || right.ty->kind != Ty_nil)
+                            EM_error(a->u.op.right->pos, "record required");
+                        break;
+                    default:
+                        EM_error(a->u.op.left->pos, "Not a comparable type");
+                    }
                     return expTy(NULL, Ty_Int());
                 case A_ltOp:
                     if (left.ty->kind != Ty_int)
@@ -289,9 +299,10 @@ expty   transExp(S_table venv, S_table tenv, A_exp a) {
             A_expList e;
             expty exp;
             
-            for(e = a->u.seq; e->tail; e=e->tail)
-                transExp(venv, tenv, e->head);
-            exp = transExp(venv, tenv, e->head);     // type of sequence is that of the last expression
+            exp = expTy(NULL, Ty_Void());           // initialized to value of an empty sequence
+            for(e = a->u.seq; e; e=e->tail)
+                exp = transExp(venv, tenv, e->head);
+
             return exp;
         }
         case A_assignExp: {
@@ -319,6 +330,9 @@ expty   transExp(S_table venv, S_table tenv, A_exp a) {
                     EM_error(a->u.iff.elsee->pos, "Else type must match Then type");
                 
                 return then;    // return then's type
+            }
+            else if (a->u.iff.then->kind != Ty_void){
+                EM_error(a->u.iff.then->pos, "Then statement must not return a value");
             }
             return expTy(NULL, Ty_Void());
         }
@@ -384,18 +398,22 @@ expty   transExp(S_table venv, S_table tenv, A_exp a) {
         }
         
         case A_arrayExp:{
-            E_enventry e = S_look(tenv, a->u.array.typ);
+            
+            Ty_ty t = S_look(tenv, a->u.array.typ);
             expty size = transExp(venv, tenv, a->u.array.size);
             expty init = transExp(venv, tenv, a->u.array.init);
 
-            if (!e->u.var.ty)
+            printf("HIT %s ", S_name(a->u.array.typ));
+            Ty_print(t);
+            printf("\n");
+            if (!t)
                 EM_error(a->pos, "Array Type is undeclared");
-            else if (e->u.var.ty != init.ty)
+            else if (t->u.array != init.ty)
                 EM_error(a->u.array.size->pos, "mismatch of array type and init type"); // TODO: fix these
             if (size.ty->kind != Ty_int)
                 EM_error(a->u.array.size->pos, "size must be an integer");
                 
-            return expTy(NULL, Ty_Array(e->u.var.ty));
+            return expTy(NULL, t);
             }
         default:
             //printf("what IS this?\n");      // seems that there are hidden expessions?
@@ -419,6 +437,10 @@ void    transDec(S_table venv, S_table tenv, A_dec d)
                 }
                 else if (type->kind == Ty_array) {  // handle array types
                     // TODO: proper array type checking
+                    Ty_print(type);
+                    Ty_print(e.ty); 
+                    if(actual_ty(type) != actual_ty(e.ty))
+                        EM_error(d->u.var.init->pos, "Mismatch of array types");
                 }
                 else if (type->kind == Ty_record) {
                     // TODO: something something type checking
@@ -433,12 +455,21 @@ void    transDec(S_table venv, S_table tenv, A_dec d)
             break;
         case A_typeDec: {       // TODO: need to "generalize" these, see book
             A_nametyList l;
-            for(l = d->u.type; l; l=l->tail)
+            for(l = d->u.type; l; l=l->tail){
+                S_enter(tenv, l->head->name, Ty_Name(l->head->name, NULL));   // for recursive definition
                 S_enter(tenv, l->head->name, transTy(tenv, l->head->ty));
+            }
         }
         case A_functionDec: {// TODO: type checking?
             A_fundec f = d->u.function->head;
-            Ty_ty resultTy = S_look(tenv, f->result);
+            Ty_ty resultTy;
+            
+            // f->result == NULL mean no return value
+            if(f->result==NULL)
+                resultTy = Ty_Void();
+            else
+                resultTy = S_look(tenv, f->result);
+                
             Ty_tyList formalTys = makeFormalTyList(tenv, f->params);
             S_enter(venv, f->name, E_FunEntry(formalTys, resultTy));
             S_beginScope(venv);
@@ -487,15 +518,24 @@ Ty_ty   transTy (              S_table tenv, A_ty a)
             Ty_fieldList g = NULL;
             A_fieldList l;
             
-            for(l = a->u.record; l; l=l->tail)  // create the field list
-                f= Ty_FieldList(Ty_Field(l->head->name, S_look(tenv, l->head->typ)), f);
+            for(l = a->u.record; l; l=l->tail){  // create the field list
+                if(S_look(tenv, l->head->typ) == NULL) {
+                    EM_error(l->head->pos, "Undeclared Type, defaulting to Int");
+                    f= Ty_FieldList(Ty_Field(l->head->name, Ty_Int()), f);
+                }
+                else {
+                    f= Ty_FieldList(Ty_Field(l->head->name, S_look(tenv, l->head->typ)), f);
+                }
+            }
             for(f; f; f=f->tail)            // reorder list
                 g = Ty_FieldList(f->head, g);
             t = Ty_Record(g); // TODO: is this the correct usage?
             break;
         }
         case A_arrayTy:
+            printf("translating array\n");
             t = Ty_Array(S_look(tenv, a->u.array));
+
             break;
         default:
             printf("no kind?\n");
@@ -506,6 +546,10 @@ Ty_ty   transTy (              S_table tenv, A_ty a)
         EM_error(a->pos, "Unknown type, defaulting to int");
         t = Ty_Int();
     }
+    printf("Type is ");
+    Ty_print(t);
+    printf("\n");
+    
     return t;
 }
 
