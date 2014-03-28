@@ -7,7 +7,9 @@ E_enventry E_VarEntry (Ty_ty ty)
 {
     E_enventry e;
     e->kind = E_varEntry;
+    //printf("\r");           // !!!! why is this the thing that prevents seg faults
     e->u.var.ty = ty;
+    printf("\r");            // For some reason this is preventing seg faults from occuring?
     return e;
 }
 E_enventry E_FunEntry (Ty_tyList formals, Ty_ty result)
@@ -18,6 +20,22 @@ E_enventry E_FunEntry (Ty_tyList formals, Ty_ty result)
     e->u.fun.formals = formals;
     return e;
 }
+
+S_table E_base_tenv(void)
+{
+    S_table r = S_empty();
+    
+    S_enter(r, S_Symbol("int"), Ty_Int());
+    S_enter(r, S_Symbol("string"), Ty_String());
+    
+    return r;
+}
+
+S_table E_base_venv(void)
+{
+    //TODO: fill this in
+}
+
 // ****************************************************
 
 expty expTy(Tr_exp exp, Ty_ty ty){
@@ -26,6 +44,7 @@ expty expTy(Tr_exp exp, Ty_ty ty){
 
 expty   transVar(S_table venv, S_table tenv, A_var v)
 {
+    printf("transVar\n"); // DEBUG
     switch(v->kind){
         case A_simpleVar:{
             E_enventry x = S_look(venv, v->u.simple);
@@ -89,6 +108,7 @@ expty   transVar(S_table venv, S_table tenv, A_var v)
 
 // translates expressions
 expty   transExp(S_table venv, S_table tenv, A_exp a) {
+    printf("transExp\n"); // DEBUG
     switch (a->kind) {
         case A_varExp:
             // translate variable
@@ -167,43 +187,43 @@ expty   transExp(S_table venv, S_table tenv, A_exp a) {
                     return expTy(NULL, Ty_Int());
                 case A_eqOp:
                     switch (left.ty->kind){
-			case Ty_int:
-				if(right.ty->kind != Ty_int)
-					EM_error(a->u.op.right->pos, "Integer required");
-				break;
-			case Ty_string:
-				if(right.ty->kind != Ty_string)
-					EM_error(a->u.op.right->pos, "string required");
-				break;
-			case Ty_array:
-				if(right.ty->kind != Ty_array)
-					EM_error(a->u.op.right->pos, "array required");
-				break;
-			case Ty_record:
-				if(right.ty->kind != Ty_record || right.ty->kind != Ty_nil)
-					EM_error(a->u.op.right->pos, "record required");
-				break;
-					}
+                case Ty_int:
+                    if(right.ty->kind != Ty_int)
+                        EM_error(a->u.op.right->pos, "Integer required");
+                    break;
+                case Ty_string:
+                    if(right.ty->kind != Ty_string)
+                        EM_error(a->u.op.right->pos, "string required");
+                    break;
+                case Ty_array:
+                    if(right.ty->kind != Ty_array)
+                        EM_error(a->u.op.right->pos, "array required");
+                    break;
+                case Ty_record:
+                    if(right.ty->kind != Ty_record || right.ty->kind != Ty_nil)
+                        EM_error(a->u.op.right->pos, "record required");
+                    break;
+                        }
                     return expTy(NULL, Ty_Int());
                 case A_neqOp:
                     switch (left.ty->kind){
-			case Ty_int:
-				if(right.ty->kind != Ty_int)
-					EM_error(a->u.op.right->pos, "Integer required");
-				break;
-			case Ty_string:
-				if(right.ty->kind != Ty_string)
-					EM_error(a->u.op.right->pos, "string required");
-				break;
-			case Ty_array:
-				if(right.ty->kind != Ty_array)
-					EM_error(a->u.op.right->pos, "array required");
-				 break;
-			case Ty_record:
-				if(right.ty->kind != Ty_record || right.ty->kind != Ty_nil)
-					EM_error(a->u.op.right->pos, "record required");
-				break;
-					}
+                case Ty_int:
+                    if(right.ty->kind != Ty_int)
+                        EM_error(a->u.op.right->pos, "Integer required");
+                    break;
+                case Ty_string:
+                    if(right.ty->kind != Ty_string)
+                        EM_error(a->u.op.right->pos, "string required");
+                    break;
+                case Ty_array:
+                    if(right.ty->kind != Ty_array)
+                        EM_error(a->u.op.right->pos, "array required");
+                     break;
+                case Ty_record:
+                    if(right.ty->kind != Ty_record || right.ty->kind != Ty_nil)
+                        EM_error(a->u.op.right->pos, "record required");
+                    break;
+                        }
                     return expTy(NULL, Ty_Int());
                 case A_ltOp:
                     if (left.ty->kind != Ty_int)
@@ -356,12 +376,20 @@ expty   transExp(S_table venv, S_table tenv, A_exp a) {
 
 void    transDec(S_table venv, S_table tenv, A_dec d)
 {
+    printf("transDec\n"); // DEBUG
     switch(d->kind) {
-        case A_varDec: {
+        case A_varDec: {    // TODO: check type and nil assignments
             expty e = transExp(venv, tenv, d->u.var.init);
             S_enter(venv, d->u.var.var, E_VarEntry(e.ty));
+            printf("passed enter");
         }
-        case A_typeDec:
+            break;
+        case A_typeDec: {       // TODO: need to "generalize" these, see book
+            A_nametyList l;
+            for(l = d->u.type; l; l=l->tail)
+                S_enter(tenv, l->head->name, transTy(tenv, l->head->ty));
+        }
+            break;
         case A_functionDec:
             break;
         default:
@@ -371,7 +399,23 @@ void    transDec(S_table venv, S_table tenv, A_dec d)
 
 Ty_ty   transTy (              S_table tenv, A_ty a)
 {
-    return Ty_Nil();
+    Ty_ty t = NULL;
+    printf("transTy\n"); // DEBUG
+    switch(a->kind){
+        case A_nameTy:
+            t = S_look(tenv, a->u.name);
+            break;
+        case A_recordTy:
+        case A_arrayTy:
+            printf("well this is awkward...\n");
+        default:
+            break;
+    }
+    
+    if (t == NULL)
+        t = Ty_Int();
+
+    return t;
 }
 
 void SEM_transProg(A_exp exp)

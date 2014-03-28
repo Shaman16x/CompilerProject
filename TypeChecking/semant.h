@@ -29,7 +29,7 @@ struct E_enventry_ {enum {E_varEntry, E_funEntry} kind;
 E_enventry E_VarEntry (Ty_ty ty);
 E_enventry E_FunEntry (Ty_tyList formals, Ty_ty result);
 
-S_table E_base_tenv(void);
+S_table E_base_tenv(void);      // creates a type table with basic types
 S_table E_base_venv(void);
 
 // *******************************************************
