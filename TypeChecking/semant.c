@@ -152,14 +152,14 @@ expty   transExp(S_table venv, S_table tenv, A_exp a) {
                             arg_list = arg_list->tail, formals = formals->tail){
                     arg = transExp(venv, tenv, arg_list->head);
                     if (arg.ty != formals->head)
-                        EM_error(a->u.op.left->pos, "mismatch of types");
+                        EM_error(arg_list->head->pos, "mismatch of types");
                 }
                 // when the for loop exits, we're at the end of at least 
                 // one of the lists: args or formals. if one is not null,
                 // then there is an incorrect number of arguments
                 if((arg_list == NULL && formals != NULL) || 
                     (formals == NULL && arg_list != NULL)){
-                    EM_error(a->u.op.left->pos, "incorrect number of arguments");
+                    EM_error(a->pos, "incorrect number of arguments");
                 }
                 return expTy(NULL, e->u.fun.result);
                 // check the return type
@@ -280,7 +280,7 @@ expty   transExp(S_table venv, S_table tenv, A_exp a) {
             expty exp;  // TODO: type checking
             A_efieldList ef;
             Ty_fieldList f = NULL, g = NULL;
-            Ty_ty recType;
+            Ty_ty recType = S_look(tenv,  a->u.record.typ);
             /*
             // convert efields into Ty_Fields
             for(ef=a->u.record.fields; ef; ef=ef->tail){
@@ -292,7 +292,10 @@ expty   transExp(S_table venv, S_table tenv, A_exp a) {
 
             recType = Ty_Record(f);
             */
-            return expTy(NULL, S_look(tenv, a->u.record.typ));
+            if(recType == NULL)
+                EM_error(a->pos, "Array Type is unkown");
+            
+            return expTy(NULL, S_look(tenv,  a->u.record.typ));
         }
             
         case A_seqExp: {
