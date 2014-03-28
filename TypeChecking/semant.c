@@ -361,7 +361,11 @@ void    transDec(S_table venv, S_table tenv, A_dec d)
             expty e = transExp(venv, tenv, d->u.var.init);
             S_enter(venv, d->u.var.var, E_VarEntry(e.ty));
         }
-        case A_typeDec:
+        case A_typeDec:{
+		expty e = transExp(venv, tenv, d->u.var.init);
+		S_enter(tenv, d->u.type->head->name,
+				transTy(d->u.type->head->ty));
+	}
         case A_functionDec:
             break;
         default:
