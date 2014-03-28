@@ -5,7 +5,7 @@
 // ****************************************************
 E_enventry E_VarEntry (Ty_ty ty)
 {
-    E_enventry e;
+   E_enventry e = checked_malloc(sizeof(*e));
     e->kind = E_varEntry;
     //printf("\r");           // !!!! why is this the thing that prevents seg faults
     e->u.var.ty = ty;
@@ -14,7 +14,7 @@ E_enventry E_VarEntry (Ty_ty ty)
 }
 E_enventry E_FunEntry (Ty_tyList formals, Ty_ty result)
 {
-    E_enventry e;
+    E_enventry e = checked_malloc(sizeof(*e));
     e->kind = E_funEntry;
     e->u.fun.result = result;
     e->u.fun.formals = formals;
