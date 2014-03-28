@@ -389,7 +389,6 @@ void    transDec(S_table venv, S_table tenv, A_dec d)
             for(l = d->u.type; l; l=l->tail)
                 S_enter(tenv, l->head->name, transTy(tenv, l->head->ty));
         }
-            break;
         case A_functionDec:
             break;
         default:
