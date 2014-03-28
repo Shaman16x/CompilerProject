@@ -5,7 +5,7 @@
 // ****************************************************
 E_enventry E_VarEntry (Ty_ty ty)
 {
-    E_enventry e;
+    E_enventry e = (E_enventry) malloc(sizeof(struct E_enventry_)); // create space for a new VarEntry
     e->kind = E_varEntry;
     //printf("\r");           // !!!! why is this the thing that prevents seg faults
     e->u.var.ty = ty;
@@ -42,6 +42,23 @@ expty expTy(Tr_exp exp, Ty_ty ty){
     expty e; e.exp=exp; e.ty=ty; return e;
 }
 
+// finds the base type of Name types
+Ty_ty actual_ty(Ty_ty t)
+{
+    Ty_ty temp = t;
+    while(temp != NULL && temp->kind == Ty_name)
+    {
+        printf("looking for thing\n");
+        temp = t->u.name.ty;
+    }
+    
+    if (temp == NULL)   // todo remove debugg prints
+        printf("null type");
+    else
+        printf("%d\n", temp->kind);
+    return temp;
+}
+
 expty   transVar(S_table venv, S_table tenv, A_var v)
 {
     printf("transVar\n"); // DEBUG
@@ -49,7 +66,7 @@ expty   transVar(S_table venv, S_table tenv, A_var v)
         case A_simpleVar:{
             E_enventry x = S_look(venv, v->u.simple);
             if (x && x->kind == E_varEntry)
-                return expTy(NULL, x->u.var.ty);    // TODO: get the "actual type" as opposed to a Name type
+                return expTy(NULL, actual_ty(x->u.var.ty));    // TODO: get the "actual type" as opposed to a Name type
             else {
                 EM_error(v->pos, "undefined variable %s", S_name(v->u.simple));
                 return expTy(NULL, Ty_Int());   // default type
@@ -135,24 +152,24 @@ expty   transExp(S_table venv, S_table tenv, A_exp a) {
             Ty_tyList formals;
             E_enventry e = S_look(venv, a->u.call.func);
             if (e && e->kind == E_funEntry){
-		formals = e->u.fun.formals;
-		// check the types of the formal args
-		for (arg_list = a->u.call.args; arg_list && formals; 
-					arg_list = arg_list->tail, formals = formals->tail){
-			arg = transExp(venv, tenv, arg_list->head);
-			if (arg.ty != formals->head)
-				EM_error(a->u.op.left->pos, "mismatch of types");
-		}
-		// when the for loop exits, we're at the end of at least 
-		// one of the lists: args or formals. if one is not null,
-		// then there is an incorrect number of arguments
-		if((arg_list == NULL && formals != NULL) || 
-			(formals == NULL && arg_list != NULL)){
-			EM_error(a->u.op.left->pos, "incorrect number of arguments");
-		}
-		return expTy(NULL, Ty_Int());
-		// check the return type
-	}
+        formals = e->u.fun.formals;
+        // check the types of the formal args
+        for (arg_list = a->u.call.args; arg_list && formals; 
+                    arg_list = arg_list->tail, formals = formals->tail){
+            arg = transExp(venv, tenv, arg_list->head);
+            if (arg.ty != formals->head)
+                EM_error(a->u.op.left->pos, "mismatch of types");
+        }
+        // when the for loop exits, we're at the end of at least 
+        // one of the lists: args or formals. if one is not null,
+        // then there is an incorrect number of arguments
+        if((arg_list == NULL && formals != NULL) || 
+            (formals == NULL && arg_list != NULL)){
+            EM_error(a->u.op.left->pos, "incorrect number of arguments");
+        }
+        return expTy(NULL, Ty_Int());
+        // check the return type
+    }
             break;
         } 
             break;
@@ -358,17 +375,17 @@ expty   transExp(S_table venv, S_table tenv, A_exp a) {
         }
         
         case A_arrayExp:{
-	        E_enventry e = S_look(tenv, a->u.array.typ);
-		expty size = transExp(venv, tenv, a->u.array.size);
-		expty init = transExp(venv, tenv, a->u.array.init);
-		
-		if (e && e->kind != init.ty->kind)
-			EM_error(a->u.forr.body->pos, "mismatch of array type and init type");
-					
-		if (size.ty->kind != Ty_int)
-			EM_error(a->u.forr.body->pos, "size must be an integer");
-        }
-	            break;
+            E_enventry e = S_look(tenv, a->u.array.typ);
+            expty size = transExp(venv, tenv, a->u.array.size);
+            expty init = transExp(venv, tenv, a->u.array.init);
+            
+            if (e && e->kind != init.ty->kind)
+                EM_error(a->u.forr.body->pos, "mismatch of array type and init type");
+                        
+            if (size.ty->kind != Ty_int)
+                EM_error(a->u.forr.body->pos, "size must be an integer");
+            }
+            break;
         default:
             printf("what IS this?\n");
     }
@@ -381,7 +398,7 @@ void    transDec(S_table venv, S_table tenv, A_dec d)
         case A_varDec: {    // TODO: check type and nil assignments
             expty e = transExp(venv, tenv, d->u.var.init);
             S_enter(venv, d->u.var.var, E_VarEntry(e.ty));
-            printf("passed enter");
+            printf("%d\n", e.ty->kind);
         }
             break;
         case A_typeDec: {       // TODO: need to "generalize" these, see book
@@ -407,13 +424,16 @@ Ty_ty   transTy (              S_table tenv, A_ty a)
         case A_recordTy:
         case A_arrayTy:
             printf("well this is awkward...\n");
+            break;
         default:
+            printf("no kind?\n");
             break;
     }
     
-    if (t == NULL)
+    if (t == NULL){
+        EM_error(a->pos, "Unknown type, defaulting to int");
         t = Ty_Int();
-
+    }
     return t;
 }
 
@@ -421,7 +441,7 @@ void SEM_transProg(A_exp exp)
 {
     expty tree;
     
-    transExp(S_empty(), S_empty(), exp);
+    transExp(S_empty(), E_base_tenv(), exp);
     printf("I did it?\n");
 }
 
