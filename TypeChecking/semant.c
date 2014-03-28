@@ -50,10 +50,6 @@ Ty_ty actual_ty(Ty_ty t)
         temp = t->u.name.ty;
     }
     
-    if (temp == NULL)   // todo remove debugg prints
-        printf("null type");
-    else
-        printf("%d\n", temp->kind);
     return temp;
 }
 
@@ -395,8 +391,18 @@ void    transDec(S_table venv, S_table tenv, A_dec d)
     switch(d->kind) {
         case A_varDec: {    // TODO: check type and nil assignments
             expty e = transExp(venv, tenv, d->u.var.init);
-            S_enter(venv, d->u.var.var, E_VarEntry(e.ty));
-            printf("%d\n", e.ty->kind);
+            Ty_ty type;
+            // check that type and initial value match
+            if(d->u.var.typ != NULL){
+                type = S_look(tenv, d->u.var.typ);      // look for type's existence
+                if (type == NULL)
+                    EM_error(d->pos, "Type is undeclared");
+                else if(type != e.ty)
+                    EM_error(d->u.var.init->pos, "value does not match the variable's type");
+                S_enter(venv, d->u.var.var, E_VarEntry(type));
+            }
+            else
+                S_enter(venv, d->u.var.var, E_VarEntry(e.ty));
         }
             break;
         case A_typeDec: {       // TODO: need to "generalize" these, see book
@@ -440,7 +446,7 @@ void SEM_transProg(A_exp exp)
     expty tree;
     
     transExp(S_empty(), E_base_tenv(), exp);
-    printf("I did it?\n");
+    printf("Finished Type Checking\n");
 }
 
 
