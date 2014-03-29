@@ -27,7 +27,7 @@ Tr_level Tr_outermost(void)
     
     l->parent = NULL;
     l->name = NULL;
-    l->formals = NULL;
+    l->frame = NULL;
     
     return l;
 }
@@ -38,10 +38,19 @@ Tr_level Tr_newLevel(Tr_level parent, Temp_label name, U_boolList formals)
     
     l->parent = parent;
     l->name = name;
-    l->formals = formals;
+    l->frame = F_newFrame(l->name, formals);
     
     return l;
 }
+
+Tr_access Tr_allocLocal(Tr_level level, bool escape)
+{
+    Tr_access a = malloc(sizeof(*a));
+    a->level = level;
+    a->access = F_allocLocal(level->frame, escape);
+    return a;
+}
+
 
 
 

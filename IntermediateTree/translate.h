@@ -13,7 +13,7 @@ typedef struct Tr_level_ *Tr_level;       // TODO: find the true values of these
 struct Tr_level_ {
     Tr_level parent;
     Temp_label name;
-    U_boolList formals;
+    F_frame frame;
 };
 
 typedef struct Tr_accessList_ *Tr_accessList;

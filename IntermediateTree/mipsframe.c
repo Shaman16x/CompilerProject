@@ -1,6 +1,5 @@
-
 #include "frame.h"
-#include "mipsframe.h"
+// #include "mipsframe.h"
 
 /* mipsframe source code */
 
