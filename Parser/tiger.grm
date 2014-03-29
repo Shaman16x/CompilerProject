@@ -25,6 +25,8 @@ void yyerror(char *s)
     A_exp term;
     A_var lvalue;
     A_ty        ty;
+    A_nametyList nametyList;
+    A_fundecList fundecList;
 
     A_dec       vardec;
     A_dec       typedec;
@@ -47,6 +49,10 @@ void yyerror(char *s)
 %type <term> term
 %type <lvalue> lvalue
 %type <ty> ty
+%type <nametyList> nametyList
+%type <nametyList> nametyList1
+%type <fundecList> funcdecList
+%type <fundecList> funcdecList1
 
 %type <vardec> vardec
 %type <typedec> typedec
@@ -80,6 +86,8 @@ void yyerror(char *s)
 %nonassoc EQ NEQ GT LT GE LE
 %left PLUS MINUS 
 %left TIMES DIVIDE
+%nonassoc TYPE
+%nonassoc FUNCTION
 
 %start program
 
@@ -154,10 +162,21 @@ decs:   /* empty */                         {$$ = NULL;}
 vardec:    VAR ID ASSIGN exp           		{$$ = A_VarDec(EM_tokPos, S_Symbol($2), NULL, $4);}
         |  VAR ID COLON ID ASSIGN exp  		{$$ = A_VarDec(EM_tokPos, S_Symbol($2), S_Symbol($4), $6);}
 
-typedec:   TYPE ID EQ ty              		{$$ = A_TypeDec(EM_tokPos, A_NametyList(A_Namety(S_Symbol($2), $4), NULL));}        
+typedec:   nametyList                       {$$ = A_TypeDec(EM_tokPos, $1);}
+        
+nametyList: nametyList1                     {$$ = $1;}
 
-funcdec:   FUNCTION ID LPAREN tyfields RPAREN EQ exp   			{$$ = A_FunctionDec(EM_tokPos, A_FundecList(A_Fundec(EM_tokPos, S_Symbol($2), $4, NULL, $7), NULL));}
-        |  FUNCTION ID LPAREN tyfields RPAREN COLON ID EQ exp   {$$ = A_FunctionDec(EM_tokPos, A_FundecList(A_Fundec(EM_tokPos, S_Symbol($2), $4, S_Symbol($7), $9), NULL));}
+nametyList1: TYPE ID EQ ty                   {$$ = A_NametyList(A_Namety(S_Symbol($2), $4), NULL);}
+        |   TYPE ID EQ ty nametyList1        {$$ = A_NametyList(A_Namety(S_Symbol($2), $4), $5);}
+
+funcdec:    funcdecList                     {$$ = A_FunctionDec(EM_tokPos, $1);}
+
+funcdecList: funcdecList1                   {$$ = $1;}
+
+funcdecList1:FUNCTION ID LPAREN tyfields RPAREN EQ exp   	        {$$ = A_FundecList(A_Fundec(EM_tokPos, S_Symbol($2), $4, NULL, $7), NULL);}
+        |    FUNCTION ID LPAREN tyfields RPAREN COLON ID EQ exp     {$$ = A_FundecList(A_Fundec(EM_tokPos, S_Symbol($2), $4, S_Symbol($7), $9), NULL);}
+        |   FUNCTION ID LPAREN tyfields RPAREN EQ exp funcdecList  	{$$ = A_FundecList(A_Fundec(EM_tokPos, S_Symbol($2), $4, NULL, $7), $8);}
+        |    FUNCTION ID LPAREN tyfields RPAREN COLON ID EQ exp funcdecList     {$$ = A_FundecList(A_Fundec(EM_tokPos, S_Symbol($2), $4, S_Symbol($7), $9), $10);}
 
 tyfields: /* empty */                       {$$ = NULL;} 
         | tyfields1                         {$$ = $1;}
