@@ -385,18 +385,17 @@ expty   transExp(S_table venv, S_table tenv, A_exp a) {
             expty then = transExp(venv, tenv, a->u.iff.then);
             expty elsee;
             
-            
             // check E for type int
             if(test.ty->kind != Ty_int)
                 EM_error(a->u.iff.test->pos, "Test for if statement must evaluate to integer");
                 
             // check that else and then match types
             if(a->u.iff.elsee != NULL) {
+                printf("else not null\n");
                 elsee = transExp(venv, tenv, a->u.iff.elsee);
                 if(then.ty->kind != elsee.ty->kind)
                     if(then.ty->kind != Ty_record && elsee.ty != Ty_Nil())
                         EM_error(a->u.iff.elsee->pos, "Else type must match Then type");
-                
                 return then;    // return then's type
             }
             else if (then.ty != Ty_Void()){
@@ -538,8 +537,9 @@ void    transDec(S_table venv, S_table tenv, A_dec d)
                     EM_error(d->u.var.init->pos, "Cannot assign a non-record the value of nil");
                 }
                 S_enter(venv, d->u.var.var, E_VarEntry(e.ty)); 
-        }
             break;
+        }
+            
         case A_typeDec: {       // TODO: need to "generalize" these, see book
             A_nametyList l;
             for(l = d->u.type; l; l=l->tail){
@@ -565,27 +565,44 @@ void    transDec(S_table venv, S_table tenv, A_dec d)
             break;
         }
         case A_functionDec: {// TODO: type checking?
-            A_fundec f = d->u.function->head;
+            A_fundecList f;
             Ty_ty resultTy;
             expty body;
-            
+            printf("funcDec\n");
             // f->result == NULL mean no return value
-            if(f->result==NULL)
-                resultTy = Ty_Void();
-            else
-                resultTy = S_look(tenv, f->result);
-                
-            Ty_tyList formalTys = makeFormalTyList(tenv, f->params);
-            S_enter(venv, f->name, E_FunEntry(formalTys, resultTy));
-            S_beginScope(venv);
-            {A_fieldList l; Ty_tyList t;
-                for(l=f->params, t=formalTys; l; l=l->tail, t=t->tail)
-                    S_enter(venv, l->head->name, E_VarEntry(t->head));
+            
+            // added pointers to all functions
+            for(f = d->u.function; f; f=f->tail){
+                if(f->head->result==NULL)
+                    resultTy = Ty_Void();
+                else
+                    resultTy = S_look(tenv, f->head->result);
+                    
+                Ty_tyList formalTys = makeFormalTyList(tenv, f->head->params);
+                S_enter(venv, f->head->name, E_FunEntry(formalTys, resultTy));
             }
-            body = transExp(venv, tenv, f->body);
-            if(actual_ty(body.ty) != actual_ty(resultTy))
-                EM_error(d->pos, "Function return type does not match the body's");
-            S_endScope(venv);
+            
+            // translate function bodies
+            for(f = d->u.function; f; f=f->tail){
+                if(f->head->result==NULL)
+                    resultTy = Ty_Void();
+                else
+                    resultTy = S_look(tenv, f->head->result);
+                    
+                Ty_tyList formalTys = makeFormalTyList(tenv, f->head->params);
+
+                S_beginScope(venv);
+                {A_fieldList l; Ty_tyList t;
+                    for(l=f->head->params, t=formalTys; l; l=l->tail, t=t->tail)
+                        S_enter(venv, l->head->name, E_VarEntry(t->head));
+                    for(l=f->head->params, t=formalTys; l; l=l->tail, t=t->tail)
+                        S_enter(venv, l->head->name, E_VarEntry(t->head));
+                }
+                body = transExp(venv, tenv, f->head->body);
+                if(actual_ty(body.ty) != actual_ty(resultTy))
+                    EM_error(d->pos, "Function return type does not match the body's");
+                S_endScope(venv);
+            }
             break;
         }
 
