@@ -542,10 +542,12 @@ void    transDec(S_table venv, S_table tenv, A_dec d)
             
             // define types
             for(l = d->u.type; l; l=l->tail){
-                S_enter(tenv, l->head->name, transTy(tenv, l->head->ty));
-                
                 check = S_look(tenv, l->head->name);
-                // fix any recursive references made in this declaration
+                if(actual_ty(check) != NULL){
+                    EM_error(d->pos, "Redefinition of type %s in the same sequence", S_name(l->head->name));
+                }
+                
+                S_enter(tenv, l->head->name, transTy(tenv, l->head->ty));
 
             }
             
@@ -572,7 +574,8 @@ void    transDec(S_table venv, S_table tenv, A_dec d)
             break;
         }
         case A_functionDec: {// TODO: type checking?
-            A_fundecList f;
+            A_fundecList f, g;
+            A_fundec check;
             Ty_ty resultTy;
             expty body;
             printf("funcDec\n");
@@ -584,9 +587,17 @@ void    transDec(S_table venv, S_table tenv, A_dec d)
                     resultTy = Ty_Void();
                 else
                     resultTy = S_look(tenv, f->head->result);
-                    
+                
                 Ty_tyList formalTys = makeFormalTyList(tenv, f->head->params);
                 S_enter(venv, f->head->name, E_FunEntry(formalTys, resultTy));
+            }
+            
+            // check for function redefinitions
+            for(f = d->u.function; f; f=f->tail){
+                check = S_look(venv, f->head->name);
+                for(g=f->tail; g; g=g->tail)
+                    if(check == S_look(venv, g->head->name))
+                        EM_error(d->pos, "Redefinition of function %s in same sequence", S_name(f->head->name));    
             }
             
             // translate function bodies
@@ -595,7 +606,7 @@ void    transDec(S_table venv, S_table tenv, A_dec d)
                     resultTy = Ty_Void();
                 else
                     resultTy = S_look(tenv, f->head->result);
-                    
+
                 Ty_tyList formalTys = makeFormalTyList(tenv, f->head->params);
 
                 S_beginScope(venv);
