@@ -346,9 +346,11 @@ expty   transExp(S_table venv, S_table tenv, A_exp a) {
 
             recType = Ty_Record(f);
             */
-            if(recType == NULL)
-                EM_error(a->pos, "Array Type is unkown");
-            
+            if(recType == NULL){
+                EM_error(a->pos, "Record Type is unkown");
+                return expTy(NULL, Ty_Void());  // placeholder
+            }
+
             return expTy(NULL, S_look(tenv,  a->u.record.typ));
         }
             
@@ -417,9 +419,9 @@ expty   transExp(S_table venv, S_table tenv, A_exp a) {
             expty body;
             
             if(lo.ty->kind != Ty_int)
-                EM_error(a->u.forr.lo->pos, "Integer Required");
+                EM_error(a->u.forr.lo->pos, "Low end of range must be an integer");
             if(hi.ty->kind != Ty_int)
-                EM_error(a->u.forr.hi->pos, "Integer Required");
+                EM_error(a->u.forr.hi->pos, "High end of range must be an integer");
             // new scope for for loop
             S_beginScope(venv);
             S_beginScope(tenv);
@@ -462,13 +464,15 @@ expty   transExp(S_table venv, S_table tenv, A_exp a) {
             expty size = transExp(venv, tenv, a->u.array.size);
             expty init = transExp(venv, tenv, a->u.array.init);
 
-            if (!t)
+            if (!t) {
                 EM_error(a->pos, "Array Type is undeclared");
+                return expTy(NULL, Ty_Array(Ty_Int())); // placeholder for nonexistent types
+            }
             else if (t->kind != Ty_array)
                 EM_error(a->pos, "Type is not an array");
             else if (t->u.array != init.ty)
                 EM_error(a->u.array.size->pos, "mismatch of array type and init type"); // TODO: fix these
-            if (size.ty->kind != Ty_int)
+            else if (size.ty->kind != Ty_int)
                 EM_error(a->u.array.size->pos, "size must be an integer");
                 
             return expTy(NULL, t);
