@@ -43,6 +43,21 @@ S_table E_base_venv(void)
 
 // ****************************************************
 
+int compareTypes(Ty_ty a, Ty_ty b)
+{
+    Ty_ty x = actual_ty(a), y = actual_ty(b);
+    
+    if(x->kind == Ty_record) {
+        if(y->kind == Ty_record){
+            return x == y;
+        }
+        else
+            return 0;
+    }
+    else 
+        return x == y;
+}
+
 expty expTy(Tr_exp exp, Ty_ty ty){
     expty e; e.exp=exp; e.ty=ty; return e;
 }
@@ -51,15 +66,39 @@ expty expTy(Tr_exp exp, Ty_ty ty){
 Ty_ty actual_ty(Ty_ty t)
 {
     Ty_ty temp = t;
+    
     while(temp != NULL && temp->kind == Ty_name)
     {
-        printf("looking for thing\n");
-        temp = t->u.name.ty;
+        //temp = S_look(
+        Ty_print(temp);
+        printf("\n");
+        temp = temp->u.name.ty;
     }
     
     return temp;
 }
 
+
+// finds the base type of Name types
+Ty_ty actual_ty_v2(S_table tenv, Ty_ty t)
+{
+    Ty_ty temp = t;
+    
+    printf("actual_ty\n");
+    while(temp != NULL && temp->kind == Ty_name)
+    {
+        Ty_print(temp);
+        printf("\n");
+        if(temp->u.name.ty == NULL){
+            printf("this is null");
+            temp = S_look(tenv, temp->u.name.sym);
+        }
+        else
+            temp = temp->u.name.ty;
+    }
+    
+    return temp;
+}
 //********************************************************************
 // Trans Var
 //********************************************************************
@@ -85,7 +124,10 @@ expty   transVar(S_table venv, S_table tenv, A_var v)
             
             // check that this var is a record
             if (rec.ty->kind == Ty_record) {
+                printf("searching record:\n");  // DEBUG
                 for (f = rec.ty->u.record; f; f=f->tail){  // TODO: better accessors?
+                    Ty_print(actual_ty(f->head->ty));
+                    printf("\n");
                     if(f->head->name == v->u.field.sym) {     // check for matching symbol
                         return expTy(NULL, f->head->ty);    // TODO: get true type?
                     }
@@ -165,8 +207,13 @@ expty   transExp(S_table venv, S_table tenv, A_exp a) {
                 for (arg_list = a->u.call.args; arg_list && formals; 
                             arg_list = arg_list->tail, formals = formals->tail){
                     arg = transExp(venv, tenv, arg_list->head);
-                    if (arg.ty != formals->head)
+                    if (actual_ty(arg.ty) != actual_ty(formals->head)) {
+                        printf("that are the types ");
+                        Ty_print(arg.ty);
+                        Ty_print(actual_ty(formals->head));
+                        printf("\n");
                         EM_error(arg_list->head->pos, "mismatch of types");
+                    }
                 }
                 // when the for loop exits, we're at the end of at least 
                 // one of the lists: args or formals. if one is not null,
@@ -496,8 +543,24 @@ void    transDec(S_table venv, S_table tenv, A_dec d)
         case A_typeDec: {       // TODO: need to "generalize" these, see book
             A_nametyList l;
             for(l = d->u.type; l; l=l->tail){
-                S_enter(tenv, l->head->name, Ty_Name(l->head->name, NULL));   // for recursive definition
+                Ty_ty check;
+                Ty_fieldList rec;
+                Ty_field f;
+                
+                S_enter(tenv, l->head->name, Ty_Name(l->head->name, NULL));   // for recursive definitions
                 S_enter(tenv, l->head->name, transTy(tenv, l->head->ty));
+                
+                check = S_look(tenv, l->head->name);
+                // fix any recursive references made in this declaration
+                if(check->kind == Ty_record){
+                    printf("Fixing record\n");  // DEBUG
+                    rec = check->u.record;
+                    for(rec; rec; rec=rec->tail){
+                        if(rec->head->ty->kind == Ty_name){ // clear up name definitions
+                            rec->head->ty->u.name.ty = S_look(tenv, rec->head->ty->u.name.sym);
+                        }
+                    }
+                }
             }
             break;
         }
