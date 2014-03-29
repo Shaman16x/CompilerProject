@@ -2,6 +2,7 @@
 
 // implementation based off of suggestions in the book
 
+
 // ****************************************************
 E_enventry E_VarEntry (Tr_access access, Ty_ty ty)
 {
@@ -185,7 +186,7 @@ expty   transExp(S_table venv, S_table tenv, A_exp a, Tr_level level) {
             return expTy(NULL, Ty_Nil());
             break;
         case A_intExp:
-            return expTy(NULL, Ty_Int());
+            return expTy(Tr_int(a->u.intt), Ty_Int());
             break;
         case A_stringExp:
             return expTy(NULL, Ty_String());
@@ -713,6 +714,7 @@ void SEM_transProg(A_exp exp)
     expty tree;
     
     transExp(E_base_venv(), E_base_tenv(), exp, Tr_outermost());
+    
     printf("Finished Type Checking\n");
 }
 

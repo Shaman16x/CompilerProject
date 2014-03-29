@@ -4,6 +4,7 @@
 #include "errormsg.h"
 #include "types.h"
 #include "absyn.h"
+#include "printtree.h"
 
 /* translate header */
 
@@ -28,7 +29,10 @@ Tr_access Tr_allocLocal(Tr_level level, bool escape);
 
 typedef struct Tr_exp_ * Tr_exp;
 
-
 // all transalation functions
-Tr_exp Tr_Int(int i);
+Tr_exp Tr_int(int i);
+Tr_exp Tr_binOp(Tr_exp left, Tr_exp right);
+Tr_exp Tr_simpleVar(Tr_access acc, Tr_level level);
+
+
 

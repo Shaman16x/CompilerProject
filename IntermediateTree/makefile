@@ -1,9 +1,9 @@
 all: parsetest parsetest_display
-parsetest_display: semant.o types.o table.o y.tab.o lex.yy.o errormsg.o util.o symbol.o absyn.o parsetest_display.o tree.o temp.o translate.o mipsframe.o
-	cc -o parsetest_display -g semant.o types.o table.o y.tab.o lex.yy.o errormsg.o util.o symbol.o absyn.o parsetest_display.o tree.o temp.o translate.o mipsframe.o
+parsetest_display: semant.o types.o table.o y.tab.o lex.yy.o errormsg.o util.o symbol.o absyn.o parsetest_display.o temp.o tree.o mipsframe.o printtree.o translate.o
+	cc -o parsetest_display -g semant.o types.o table.o y.tab.o lex.yy.o errormsg.o util.o symbol.o absyn.o parsetest_display.o temp.o tree.o mipsframe.o printtree.o translate.o
 
-parsetest: parsetest.o tree.o temp.o translate.o mipsframe.o semant.o types.o table.o y.tab.o lex.yy.o errormsg.o util.o symbol.o absyn.o parsetest.o 
-	cc -o parsetest -g tree.o temp.o translate.o mipsframe.o semant.o types.o table.o symbol.o absyn.o y.tab.o lex.yy.o errormsg.o util.o parsetest.o 
+parsetest: parsetest.o semant.o types.o table.o y.tab.o lex.yy.o errormsg.o util.o symbol.o absyn.o temp.o tree.o mipsframe.o printtree.o translate.o
+	cc -o parsetest -g parsetest.o semant.o types.o table.o symbol.o absyn.o y.tab.o lex.yy.o errormsg.o util.o  temp.o tree.o mipsframe.o printtree.o translate.o
 
 parsetest.o: parsetest.c errormsg.h util.h absyn.h
 	cc -g -c parsetest.c
@@ -46,6 +46,9 @@ translate.o: translate.c translate.h
 
 mipsframe.o: mipsframe.c mipsframe.h
 	cc -g -c mipsframe.c
+
+printtree.o: printtree.c printtree.h
+	cc -g -c printtree.c
 
 util.o: util.c util.h
 	cc -g -c util.c

@@ -2,6 +2,8 @@
 
 /* translate source code */
 
+
+
 typedef struct patchList_ *patchList;
 struct patchList_ {Temp_label *head; patchList tail;};
 static patchList PatchList(Temp_label *head, patchList tail)
@@ -78,8 +80,8 @@ static T_exp unEx(Tr_exp e){
     assert(0);  /* should not get here */
 }
 
-static T_stm unNx(Tr_exp e);
-static struct Cx unCx(Tr_exp e);
+static T_stm unNx(Tr_exp e);        // TODO: this
+static struct Cx unCx(Tr_exp e);    // TODO: this
     
 struct Tr_access_ {Tr_level level; F_access access;};
 
@@ -107,11 +109,9 @@ Tr_level Tr_outermost(void)
 Tr_level Tr_newLevel(Tr_level parent, Temp_label name, U_boolList formals)
 {
     Tr_level l = malloc(sizeof(*l));
-    
     l->parent = parent;
     l->name = name;
     l->frame = F_newFrame(l->name, formals);
-    
     return l;
 }
 
@@ -122,6 +122,23 @@ Tr_access Tr_allocLocal(Tr_level level, bool escape)
     a->access = F_allocLocal(level->frame, escape);
     return a;
 }
+
+void printStm(T_stm stm)
+{
+    FILE *f = fopen("trees.txt", "a");
+    T_stmList l = T_StmList(stm, NULL);
+    printStmList(f, l);
+    fclose(f);
+}
+
+// translate functions
+Tr_exp Tr_int(int i)
+{
+    printf("got here!\n");
+    printStm(T_Exp(T_Const(i)));
+    return Tr_Ex(T_Const(i));
+}
+
 
 
 

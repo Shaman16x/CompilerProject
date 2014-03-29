@@ -3,6 +3,8 @@
 
 /* mipsframe source code */
 
+const int F_wordSize = 4;   // four bytes per word
+
 struct F_access_
 {
     enum {inFrame, inReg} kind;
