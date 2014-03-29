@@ -8,7 +8,6 @@
 /* translate header */
 
 typedef struct Tr_access_ *Tr_access;
-typedef int patchList;
 typedef struct Tr_level_ *Tr_level;       // TODO: find the true values of these
 struct Tr_level_ {
     Tr_level parent;
@@ -30,6 +29,6 @@ Tr_access Tr_allocLocal(Tr_level level, bool escape);
 typedef struct Tr_exp_ * Tr_exp;
 
 
-static Tr_exp Tr_Ex(T_exp ex);
-static Tr_exp Tr_Nx(T_stm nx);
-static Tr_exp Tr_Cx(patchList trues, patchList falses, T_stm stm);
+// all transalation functions
+Tr_exp Tr_Int(int i);
+
