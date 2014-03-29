@@ -64,3 +64,9 @@ F_access F_allocLocal(F_frame frame, bool escape){
         return InFrame(0);  // only doing inreg allocs
 }
 
+Temp_temp F_FP(void){
+    return Temp_newtemp();  // set the appropriate frame pointer
+}
+
+
+

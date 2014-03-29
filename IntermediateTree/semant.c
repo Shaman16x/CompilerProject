@@ -239,25 +239,25 @@ expty   transExp(S_table venv, S_table tenv, A_exp a, Tr_level level) {
                         EM_error(a->u.op.left->pos, "Integer required");
                     if (right.ty->kind != Ty_int)
                         EM_error(a->u.op.right->pos, "Integer required");
-                    return expTy(NULL, Ty_Int());
+                    return expTy(Tr_oper(oper, left.exp, right.exp), Ty_Int());
                 case A_minusOp:
                     if (left.ty->kind != Ty_int)
                         EM_error(a->u.op.left->pos, "Integer required");
                     if (right.ty->kind != Ty_int)
                         EM_error(a->u.op.right->pos, "Integer required");
-                    return expTy(NULL, Ty_Int());
+                    return expTy(Tr_oper(oper, left.exp, right.exp), Ty_Int());
                 case A_timesOp:
                     if (left.ty->kind != Ty_int)
                         EM_error(a->u.op.left->pos, "Integer required");
                     if (right.ty->kind != Ty_int)
                         EM_error(a->u.op.right->pos, "Integer required");
-                    return expTy(NULL, Ty_Int());
+                    return expTy(Tr_oper(oper, left.exp, right.exp), Ty_Int());
                 case A_divideOp:
                     if (left.ty->kind != Ty_int)
                         EM_error(a->u.op.left->pos, "Integer required");
                     if (right.ty->kind != Ty_int)
                         EM_error(a->u.op.right->pos, "Integer required");
-                    return expTy(NULL, Ty_Int());
+                    return expTy(Tr_oper(oper, left.exp, right.exp), Ty_Int());
                 case A_eqOp:
                     switch (left.ty->kind){
                     case Ty_int:

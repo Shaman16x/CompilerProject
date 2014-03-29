@@ -2,8 +2,6 @@
 
 /* translate source code */
 
-
-
 typedef struct patchList_ *patchList;
 struct patchList_ {Temp_label *head; patchList tail;};
 static patchList PatchList(Temp_label *head, patchList tail)
@@ -125,7 +123,7 @@ Tr_access Tr_allocLocal(Tr_level level, bool escape)
 
 void printStm(T_stm stm)
 {
-    FILE *f = fopen("trees.txt", "a");
+    FILE *f = fopen("debug.txt", "a");
     T_stmList l = T_StmList(stm, NULL);
     printStmList(f, l);
     fclose(f);
@@ -134,11 +132,45 @@ void printStm(T_stm stm)
 // translate functions
 Tr_exp Tr_int(int i)
 {
-    printf("got here!\n");
-    printStm(T_Exp(T_Const(i)));
     return Tr_Ex(T_Const(i));
 }
 
+Tr_exp Tr_simpleVar(Tr_access acc, Tr_level level)
+{
+    Tr_exp ret = NULL;
+    Tr_exp ret = NULL;
+}
+
+Tr_exp Tr_oper(A_oper oper, Tr_exp left, Tr_exp right)
+{
+    Tr_exp ret = NULL;
+    switch (oper){
+        case A_plusOp:
+            ret = Tr_Ex(T_Binop(T_plus, unEx(left), unEx(right)));
+            break;
+        case A_minusOp:
+            ret = Tr_Ex(T_Binop(T_minus, unEx(left), unEx(right)));
+            break;
+        case A_timesOp:
+            ret = Tr_Ex(T_Binop(T_mul, unEx(left), unEx(right)));
+            break;
+        case A_divideOp:
+            ret = Tr_Ex(T_Binop(T_div, unEx(left), unEx(right)));
+            break;
+        case A_eqOp:
+        case A_neqOp:
+        case A_ltOp:
+        case A_leOp:
+        case A_gtOp:
+        case A_geOp:
+        default:
+            return NULL;
+    }
+    
+    printStm(T_Exp(unEx(ret)));
+    
+    return ret;
+}
 
 
 
