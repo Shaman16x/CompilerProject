@@ -1,9 +1,9 @@
 all: parsetest parsetest_display
 parsetest_display: semant.o types.o table.o y.tab.o lex.yy.o errormsg.o util.o symbol.o absyn.o parsetest_display.o tree.o temp.o translate.o mipsframe.o
-	cc -o parsetest_display -g semant.o types.o table.o symbol.o absyn.o y.tab.o lex.yy.o errormsg.o util.o parsetest_display.o tree.o temp.o translate.o mipsframe.o
+	cc -o parsetest_display -g semant.o types.o table.o y.tab.o lex.yy.o errormsg.o util.o symbol.o absyn.o parsetest_display.o tree.o temp.o translate.o mipsframe.o
 
-parsetest: semant.o types.o table.o y.tab.o lex.yy.o errormsg.o util.o symbol.o absyn.o parsetest.o tree.o temp.o translate.o mipsframe.o
-	cc -o parsetest -g semant.o types.o table.o symbol.o absyn.o y.tab.o lex.yy.o errormsg.o util.o parsetest.o tree.o temp.o translate.o mipsframe.o
+parsetest: parsetest.o tree.o temp.o translate.o mipsframe.o semant.o types.o table.o y.tab.o lex.yy.o errormsg.o util.o symbol.o absyn.o parsetest.o 
+	cc -o parsetest -g tree.o temp.o translate.o mipsframe.o semant.o types.o table.o symbol.o absyn.o y.tab.o lex.yy.o errormsg.o util.o parsetest.o 
 
 parsetest.o: parsetest.c errormsg.h util.h absyn.h
 	cc -g -c parsetest.c
@@ -41,11 +41,10 @@ semant.o: semant.c semant.h
 #	lex tiger.lex
 
 # PA5 related stuffs
+translate.o: translate.c translate.h
+	gcc -g -c translate.c
 
-translate.o: translate.c translate.h temp.h
-	cc -g -c translate.c
-
-mipsframe.o: mipsframe.c mipsframe.h frame.h
+mipsframe.o: mipsframe.c mipsframe.h
 	cc -g -c mipsframe.c
 
 util.o: util.c util.h
