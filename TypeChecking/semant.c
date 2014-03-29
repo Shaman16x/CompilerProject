@@ -124,10 +124,7 @@ expty   transVar(S_table venv, S_table tenv, A_var v)
             
             // check that this var is a record
             if (rec.ty->kind == Ty_record) {
-                printf("searching record:\n");  // DEBUG
                 for (f = rec.ty->u.record; f; f=f->tail){  // TODO: better accessors?
-                    Ty_print(actual_ty(f->head->ty));
-                    printf("\n");
                     if(f->head->name == v->u.field.sym) {     // check for matching symbol
                         return expTy(NULL, f->head->ty);    // TODO: get true type?
                     }
@@ -208,10 +205,6 @@ expty   transExp(S_table venv, S_table tenv, A_exp a) {
                             arg_list = arg_list->tail, formals = formals->tail){
                     arg = transExp(venv, tenv, arg_list->head);
                     if (actual_ty(arg.ty) != actual_ty(formals->head)) {
-                        printf("that are the types ");
-                        Ty_print(arg.ty);
-                        Ty_print(actual_ty(formals->head));
-                        printf("\n");
                         EM_error(arg_list->head->pos, "mismatch of types");
                     }
                 }
@@ -391,7 +384,6 @@ expty   transExp(S_table venv, S_table tenv, A_exp a) {
                 
             // check that else and then match types
             if(a->u.iff.elsee != NULL) {
-                printf("else not null\n");
                 elsee = transExp(venv, tenv, a->u.iff.elsee);
                 if(then.ty->kind != elsee.ty->kind)
                     if(then.ty->kind != Ty_record && elsee.ty != Ty_Nil())
@@ -470,9 +462,6 @@ expty   transExp(S_table venv, S_table tenv, A_exp a) {
             expty size = transExp(venv, tenv, a->u.array.size);
             expty init = transExp(venv, tenv, a->u.array.init);
 
-            printf("HIT %s ", S_name(a->u.array.typ));
-            Ty_print(t);
-            printf("\n");
             if (!t)
                 EM_error(a->pos, "Array Type is undeclared");
             else if (t->kind != Ty_array)
@@ -542,24 +531,42 @@ void    transDec(S_table venv, S_table tenv, A_dec d)
             
         case A_typeDec: {       // TODO: need to "generalize" these, see book
             A_nametyList l;
+            Ty_ty check;
+            Ty_fieldList rec;
+            Ty_field f;
+            
+            // declare the types as names first
             for(l = d->u.type; l; l=l->tail){
-                Ty_ty check;
-                Ty_fieldList rec;
-                Ty_field f;
-                
                 S_enter(tenv, l->head->name, Ty_Name(l->head->name, NULL));   // for recursive definitions
+            }
+            
+            // define types
+            for(l = d->u.type; l; l=l->tail){
                 S_enter(tenv, l->head->name, transTy(tenv, l->head->ty));
                 
                 check = S_look(tenv, l->head->name);
                 // fix any recursive references made in this declaration
+
+            }
+            
+            // check for cyclical definitions and fix record decs
+            for(l = d->u.type; l; l=l->tail){
+                check = S_look(tenv, l->head->name);   // for recursive definitions
+                
                 if(check->kind == Ty_record){
                     printf("Fixing record\n");  // DEBUG
                     rec = check->u.record;
                     for(rec; rec; rec=rec->tail){
                         if(rec->head->ty->kind == Ty_name){ // clear up name definitions
                             rec->head->ty->u.name.ty = S_look(tenv, rec->head->ty->u.name.sym);
+                            if(actual_ty(rec->head->ty->u.name.ty) == NULL) {
+                                EM_error(d->pos, "Type definition for %s is cyclical", S_name(l->head->name));
+                            }
                         }
                     }
+                }
+                else if (actual_ty(S_look(tenv, l->head->name)) == NULL){
+                    EM_error(d->pos, "Type definition for %s is cyclical", S_name(l->head->name));
                 }
             }
             break;
