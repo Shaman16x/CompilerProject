@@ -69,7 +69,7 @@ Temp_temp F_FP(void){
 }
 
 T_exp F_Exp(F_access acc, T_exp framePtr){
-    return T_Mem(T_Binop(T_plus, framePtr, acc));   // assuming only frame values
+    return T_Mem(T_Binop(T_plus, framePtr, T_Const(acc->u.offset)));   // assuming only frame values
 }
 
 

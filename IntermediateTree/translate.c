@@ -138,12 +138,8 @@ Tr_exp Tr_int(int i)
 Tr_exp Tr_simpleVar(Tr_access acc, Tr_level level)
 {
     Tr_exp ret = NULL;
-    
     ret = Tr_Ex(F_Exp(acc->access, T_Temp(F_FP())));
-    printStm(T_Exp(F_Exp(acc->access, T_Temp(F_FP()))));
-    printf("got here\n");
     //printStm(T_Exp(unEx(ret)));
-    printf("got here\n");
     return ret;
 }
 
