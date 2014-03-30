@@ -165,17 +165,26 @@ Tr_exp Tr_int(int i)
     return Tr_Ex(T_Const(i));
 }
 
+Tr_exp Tr_string(string s){
+    Temp_label lab = Temp_newlabel();
+    // F_String(lab, s); TODO: make this function, allocs values in heap
+    return Tr_Ex(T_Name(lab));
+}
+
 Tr_exp Tr_simpleVar(Tr_access acc, Tr_level level)
 {
     Tr_exp ret = NULL;  // TODO: turn this into a thing,pg 160
-    printf("entered simpleVar\n");
     if (acc->access == NULL) printf("access problem\n");
     T_Temp(F_FP());
-    printf("creating ret\n");
     ret = Tr_Ex(F_Exp(acc->access, T_Temp(F_FP())));
-    printf("done\n");
     // printStm(T_Exp(unEx(ret)));
     return ret;
+}
+
+Tr_exp Tr_subscriptVar(Tr_exp lv, Tr_exp i){
+    // TODO: this
+        T_exp e = T_Mem(T_Binop(T_plus, T_Mem(unEx(lv)), T_Binop(T_mul, unEx(i), T_Const(F_wordSize))));
+    return Tr_Ex(e);
 }
 
 Tr_exp Tr_oper(A_oper oper, Tr_exp left, Tr_exp right)
@@ -313,7 +322,7 @@ Tr_exp Tr_while(Tr_exp test, Tr_exp body, Temp_label done){
              T_Seq(T_Label(loop),
                T_Seq(T_Exp(unEx(body)),
                  T_Seq(T_Jump(T_Name(head), Temp_LabelList(head, NULL)),
-                   T_Label(done))))));
+                   T_Label(done)))))); 
     //printStm(stm);
     return Tr_Nx(stm);
 }

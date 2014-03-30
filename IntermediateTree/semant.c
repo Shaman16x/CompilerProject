@@ -118,29 +118,31 @@ expty   transVar(S_table venv, S_table tenv, A_var v, Tr_level level)
             }
             else {
                 EM_error(v->pos, "undefined variable %s", S_name(v->u.simple));
-                return expTy(NULL, Ty_Int());   // default type
+                return expTy(Tr_nop(), Ty_Int());   // default type
             }
         }
         
         // handle record accesses
         case A_fieldVar: {
             expty rec = transVar(venv, tenv, v->u.field.var, level);
+            int recOffset = 0;
             Ty_fieldList f;
             
             // check that this var is a record
             if (rec.ty->kind == Ty_record) {
                 for (f = rec.ty->u.record; f; f=f->tail){  // TODO: better accessors?
+                    recOffset += 1;
                     if(f->head->name == v->u.field.sym) {     // check for matching symbol
-                        return expTy(NULL, f->head->ty);    // TODO: get true type?
+                        return expTy(Tr_subscriptVar(rec.exp, Tr_int(recOffset)), f->head->ty);    // TODO: resolve temp use of subscript handler, works since all vars a ints or pointers
                     }
                 }
                 // could not find the record
                 EM_error(v->pos, "Field %s was not in record", S_name(v->u.field.sym));
-                return expTy(NULL, Ty_Int());   // default type
+                return expTy(Tr_nop(), Ty_Int());   // default type
             }
             else {
                 EM_error(v->pos, "Not a record");
-                return expTy(NULL, Ty_Int());   // default type
+                return expTy(Tr_nop(), Ty_Int());   // default type
             }
         }
         
@@ -152,16 +154,16 @@ expty   transVar(S_table venv, S_table tenv, A_var v, Tr_level level)
             // check that this var is an array
             if (arr.ty->kind == Ty_array) {
                 if(e.ty->kind == Ty_int){
-                    return expTy(NULL, arr.ty->u.array);    // return the array's type
+                    return expTy(Tr_subscriptVar(arr.exp, e.exp), arr.ty->u.array);    // return the array's type
                 }
                 else {
                     EM_error(v->u.subscript.exp->pos, "Integer required");
-                    return expTy(NULL, Ty_Int());   // default type
+                    return expTy(Tr_nop(), Ty_Int());   // error type
                 }
             }
             else {
                 EM_error(v->pos, "Not an array");
-                return expTy(NULL, Ty_Int());   // default type
+                return expTy(Tr_nop(), Ty_Int());   // error type
             }
         }
         
@@ -169,7 +171,7 @@ expty   transVar(S_table venv, S_table tenv, A_var v, Tr_level level)
             printf("What IS this?...variable\n");
     }
     
-    return expTy(NULL, Ty_Void());
+    return expTy(Tr_nop(), Ty_Void());
 }
 
 //********************************************************************
@@ -190,7 +192,7 @@ expty   transExp(S_table venv, S_table tenv, A_exp a, Tr_level level, Temp_label
             return expTy(Tr_int(a->u.intt), Ty_Int());
             break;
         case A_stringExp:
-            return expTy(NULL, Ty_String());    // TODO: appropriate string handle
+            return expTy(Tr_string(a->u.stringg), Ty_String());    // TODO: appropriate string handle
             break;
         case A_callExp:
         {
@@ -353,17 +355,17 @@ expty   transExp(S_table venv, S_table tenv, A_exp a, Tr_level level, Temp_label
             */
             if(recType == NULL){
                 EM_error(a->pos, "Record Type is unkown");
-                return expTy(NULL, Ty_Void());  // placeholder
+                return expTy(Tr_nop(), Ty_Nil());  // TODO: replace placeholder
             }
 
-            return expTy(NULL, S_look(tenv,  a->u.record.typ));
+            return expTy(Tr_int(0), S_look(tenv,  a->u.record.typ));
         }
             
         case A_seqExp: {
             A_expList e;
             expty exp;
             
-            exp = expTy(NULL, Ty_Void());           // initialized to value of an empty sequence
+            exp = expTy(Tr_nop(), Ty_Void());           // initialized to value of an empty sequence
             for(e = a->u.seq; e; e=e->tail)
                 exp = transExp(venv, tenv, e->head, level, done);
 
@@ -384,8 +386,6 @@ expty   transExp(S_table venv, S_table tenv, A_exp a, Tr_level level, Temp_label
             expty test = transExp(venv, tenv, a->u.iff.test, level, done);
             expty then = transExp(venv, tenv, a->u.iff.then, level, done);
             expty elsee;
-            
-            printf("Doing the if statement\n"); // DEBUG
             
             // check E for type int
             if(test.ty->kind != Ty_int)
@@ -474,6 +474,7 @@ expty   transExp(S_table venv, S_table tenv, A_exp a, Tr_level level, Temp_label
             S_beginScope(tenv);
             for(d = a->u.let.decs; d; d=d->tail)
                 declist = Tr_declist(transDec(venv, tenv, d->head, level, done), declist);
+            //printf("entering in body\n");
             body = transExp(venv, tenv, a->u.let.body, level, done);
             ret = expTy(Tr_let(declist, body.exp), Ty_Void()); 
             S_endScope(tenv);
@@ -498,11 +499,11 @@ expty   transExp(S_table venv, S_table tenv, A_exp a, Tr_level level, Temp_label
             else if (size.ty->kind != Ty_int)
                 EM_error(a->u.array.size->pos, "size must be an integer");
                 
-            return expTy(NULL, t);
+            return expTy(Tr_int(0), t); // TODO: return an actual array
             }
         default:
             //printf("what IS this?\n");      // seems that there are hidden expessions?
-            return expTy(NULL, Ty_Void());
+            return expTy(Tr_nop(), Ty_Void());
     }
 }
 

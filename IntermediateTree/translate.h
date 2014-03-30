@@ -31,10 +31,11 @@ typedef struct Tr_exp_ * Tr_exp;
 
 // all transalation functions
 Tr_exp Tr_int(int i);
+Tr_exp Tr_string(string s);
 Tr_exp Tr_oper(A_oper oper, Tr_exp left, Tr_exp right);
 Tr_exp Tr_simpleVar(Tr_access acc, Tr_level level);
-Tr_exp Tr_subscriptVar(Tr_access acc, Tr_level level);
-Tr_exp Tr_fieldVar(Tr_access acc, Tr_level level);
+Tr_exp Tr_subscriptVar(Tr_exp lv, Tr_exp i);  // arrays
+Tr_exp Tr_fieldVar(Tr_access acc, Tr_level level);  // records
 Tr_exp Tr_assign(Tr_exp var, Tr_exp exp);
 Tr_exp Tr_declist(Tr_exp head, Tr_exp tail);
 Tr_exp Tr_nop(void);
