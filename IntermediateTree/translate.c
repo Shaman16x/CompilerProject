@@ -81,7 +81,19 @@ static T_exp unEx(Tr_exp e){
     assert(0);  /* should not get here */
 }
 
-static T_stm unNx(Tr_exp e);        // TODO: this
+static T_stm unNx(Tr_exp e){        // TODO: this
+    switch(e->kind){
+    case Tr_ex:
+        return T_Exp(e->u.ex);
+    case Tr_cx:{
+        return e->u.cx.stm;// TODO: write the appropriate conversion
+    }
+    case Tr_nx:
+        return e->u.nx;
+    }
+}
+
+
 static struct Cx unCx(Tr_exp e){    // TODO: this
     switch(e->kind){
     case Tr_ex:{
@@ -238,6 +250,24 @@ Tr_exp Tr_assign(Tr_exp var, Tr_exp exp)
     return Tr_Nx(ret);
 }
 
+Tr_exp Tr_declist(Tr_exp head, Tr_exp tail){
+    T_stm ret;
+    ret = T_Seq(unNx(head), unNx(tail)); 
+    //printStm(ret);
+    return Tr_Nx(ret);
+}
+
+Tr_exp Tr_nop(void){
+    return Tr_Ex(T_Const(0));
+}
+
+Tr_exp Tr_let(Tr_exp decs, Tr_exp body){
+    T_stm ret;
+    ret = T_Seq(unNx(decs), unNx(body));
+    //printStm(ret);
+    return Tr_Nx(ret);
+}
+
 Tr_exp Tr_if(Tr_exp test, Tr_exp then, Tr_exp elsee){
     T_stm ret = NULL;
     Temp_label tr = Temp_newlabel(), fl = Temp_newlabel(), end = Temp_newlabel();
@@ -279,7 +309,7 @@ Tr_exp Tr_while(Tr_exp test, Tr_exp body, Temp_label done){
                T_Seq(T_Exp(unEx(body)),
                  T_Seq(T_Jump(T_Name(head), Temp_LabelList(head, NULL)),
                    T_Label(done))))));
-    printStm(stm);
+    //printStm(stm);
     return Tr_Nx(stm);
 }
 

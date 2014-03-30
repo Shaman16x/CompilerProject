@@ -190,7 +190,7 @@ expty   transExp(S_table venv, S_table tenv, A_exp a, Tr_level level, Temp_label
             return expTy(Tr_int(a->u.intt), Ty_Int());
             break;
         case A_stringExp:
-            return expTy(NULL, Ty_String());
+            return expTy(NULL, Ty_String());    // TODO: appropriate string handle
             break;
         case A_callExp:
         {
@@ -225,7 +225,7 @@ expty   transExp(S_table venv, S_table tenv, A_exp a, Tr_level level, Temp_label
             }
             else {
                 EM_error(a->pos, "Function is undefined");
-                return expTy(NULL, Ty_Void());
+            return expTy(NULL, Ty_Void());
             }
         break;
         } 
@@ -457,16 +457,18 @@ expty   transExp(S_table venv, S_table tenv, A_exp a, Tr_level level, Temp_label
             
         case A_letExp: {    // copied from the book's implementation
             A_decList d;
-            expty exp;
+            expty body, ret;
+            Tr_exp declist = Tr_nop();  // holds declarations in a sequence
             
             S_beginScope(venv);
             S_beginScope(tenv);
             for(d = a->u.let.decs; d; d=d->tail)
-                transDec(venv, tenv, d->head, level, done);
-            exp = transExp(venv, tenv, a->u.let.body, level, done);
+                declist = Tr_declist(transDec(venv, tenv, d->head, level, done), declist);
+            body = transExp(venv, tenv, a->u.let.body, level, done);
+            ret = expTy(Tr_let(declist, body.exp), Ty_Void()); 
             S_endScope(tenv);
             S_endScope(venv);
-            return exp;
+            return ret;
         }
         
         case A_arrayExp:{
@@ -498,13 +500,15 @@ expty   transExp(S_table venv, S_table tenv, A_exp a, Tr_level level, Temp_label
 // Trans Dec
 //********************************************************************
 
-void    transDec(S_table venv, S_table tenv, A_dec d, Tr_level level, Temp_label done)
+Tr_exp  transDec(S_table venv, S_table tenv, A_dec d, Tr_level level, Temp_label done)
 {
     printf("transDec\n"); // DEBUG
     switch(d->kind) {
         case A_varDec: {    // TODO: check type and nil assignments
             expty e = transExp(venv, tenv, d->u.var.init, level, done);
+            E_enventry temp;
             Ty_ty type;
+
             // check that type and initial value match
             if(d->u.var.typ != NULL){
                 type = S_look(tenv, d->u.var.typ);      // look for type's existence
@@ -535,13 +539,16 @@ void    transDec(S_table venv, S_table tenv, A_dec d, Tr_level level, Temp_label
                 else if(type != e.ty)       // basic type check
                     EM_error(d->u.var.init->pos, "value does not match the variable's type");
                 S_enter(venv, d->u.var.var, E_VarEntry(Tr_allocLocal(level, TRUE), type));
+                temp = S_look(venv, d->u.var.var);
+                return Tr_assign(Tr_simpleVar(temp->u.var.access, level), e.exp);    // TODO: figure out if only simple var
             }
             else
                 if(e.ty->kind == Ty_nil){
                     EM_error(d->u.var.init->pos, "Cannot assign a non-record the value of nil");
                 }
-                S_enter(venv, d->u.var.var, E_VarEntry(Tr_allocLocal(level, TRUE),e.ty)); 
-            break;
+            S_enter(venv, d->u.var.var, E_VarEntry(Tr_allocLocal(level, TRUE),e.ty)); 
+            temp = S_look(venv, d->u.var.var);
+            return Tr_assign(Tr_simpleVar(temp->u.var.access, level), e.exp);    // TODO: figure out if only simple var
         }
             
         case A_typeDec: {       // TODO: need to "generalize" these, see book
@@ -586,7 +593,7 @@ void    transDec(S_table venv, S_table tenv, A_dec d, Tr_level level, Temp_label
                     EM_error(d->pos, "Type definition for %s is cyclical", S_name(l->head->name));
                 }
             }
-            break;
+            return Tr_nop();  // nop
         }
         case A_functionDec: {// TODO: type checking?
             A_fundecList f, g;
@@ -642,7 +649,7 @@ void    transDec(S_table venv, S_table tenv, A_dec d, Tr_level level, Temp_label
                     EM_error(d->pos, "Function return type does not match the body's");
                 S_endScope(venv);
             }
-            break;
+            return Tr_nop();  // nop
         }
 
         default:
