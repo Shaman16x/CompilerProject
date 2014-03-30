@@ -113,8 +113,9 @@ expty   transVar(S_table venv, S_table tenv, A_var v, Tr_level level)
     switch(v->kind){
         case A_simpleVar:{
             E_enventry x = S_look(venv, v->u.simple);
-            if (x && x->kind == E_varEntry)
-                return expTy(NULL, actual_ty(x->u.var.ty));    // TODO: get the "actual type" as opposed to a Name type
+            if (x && x->kind == E_varEntry){
+                return expTy(Tr_simpleVar(x->u.var.access, level), actual_ty(x->u.var.ty));    // TODO: get the "actual type" as opposed to a Name type
+            }
             else {
                 EM_error(v->pos, "undefined variable %s", S_name(v->u.simple));
                 return expTy(NULL, Ty_Int());   // default type
