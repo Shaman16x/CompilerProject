@@ -13,8 +13,9 @@ static patchList PatchList(Temp_label *head, patchList tail)
 }
 
 void doPatch(patchList tList, Temp_label label){
-    for(;tList; tList=tList->tail)
-        *(tList->head) = label;
+    for(; tList; tList=tList->tail){
+            * (tList->head) = label;
+        }
 }
 
 patchList joinPatch(patchList first, patchList second) {
@@ -51,7 +52,9 @@ static Tr_exp Tr_Cx(patchList trues, patchList falses, T_stm stm)
 {
     Tr_exp r = malloc(sizeof(*r));
     r->kind = Tr_cx;
-    // TODO: this
+    r->u.cx.trues = trues;
+    r->u.cx.falses = falses;
+    r->u.cx.stm = stm;
     return r;
 }
 
@@ -64,6 +67,8 @@ static T_exp unEx(Tr_exp e){
         Temp_label t = Temp_newlabel(), f = Temp_newlabel();
         doPatch(e->u.cx.trues, t);
         doPatch(e->u.cx.falses, f);
+        
+    
         
         return T_Eseq(T_Move(T_Temp(r), T_Const(1)),
                 T_Eseq(e->u.cx.stm,
@@ -137,15 +142,16 @@ Tr_exp Tr_int(int i)
 
 Tr_exp Tr_simpleVar(Tr_access acc, Tr_level level)
 {
-    Tr_exp ret = NULL;
+    Tr_exp ret = NULL;  // TODO: turn this into a thing,pg 160
     ret = Tr_Ex(F_Exp(acc->access, T_Temp(F_FP())));
-    //printStm(T_Exp(unEx(ret)));
+    printStm(T_Exp(unEx(ret)));
     return ret;
 }
 
 Tr_exp Tr_oper(A_oper oper, Tr_exp left, Tr_exp right)
 {
     Tr_exp ret = NULL;
+    T_stm op;
     switch (oper){
         case A_plusOp:
             ret = Tr_Ex(T_Binop(T_plus, unEx(left), unEx(right)));
@@ -159,17 +165,53 @@ Tr_exp Tr_oper(A_oper oper, Tr_exp left, Tr_exp right)
         case A_divideOp:
             ret = Tr_Ex(T_Binop(T_div, unEx(left), unEx(right)));
             break;
-        case A_eqOp:
-        case A_neqOp:
-        case A_ltOp:
-        case A_leOp:
-        case A_gtOp:
-        case A_geOp:
+        case A_eqOp:{
+            op = T_Cjump(T_eq, unEx(left), unEx(right), NULL, NULL);
+            patchList trues = PatchList(&op->u.CJUMP.true, NULL);
+            patchList falses = PatchList(&op->u.CJUMP.false, NULL);
+            ret = Tr_Cx(trues, falses, op);
+            break;
+        }
+        case A_neqOp:{
+            op = T_Cjump(T_ne, unEx(left), unEx(right), NULL, NULL);
+            patchList trues = PatchList(&op->u.CJUMP.true, NULL);
+            patchList falses = PatchList(&op->u.CJUMP.false, NULL);
+            ret = Tr_Cx(trues, falses, op);
+            break;
+        }
+        case A_ltOp:{
+            op = T_Cjump(T_lt, unEx(left), unEx(right), NULL, NULL);
+            patchList trues = PatchList(&op->u.CJUMP.true, NULL);
+            patchList falses = PatchList(&op->u.CJUMP.false, NULL);
+            ret = Tr_Cx(trues, falses, op);
+            break;
+        }
+        case A_leOp:{
+            op = T_Cjump(T_le, unEx(left), unEx(right), NULL, NULL);
+            patchList trues = PatchList(&op->u.CJUMP.true, NULL);
+            patchList falses = PatchList(&op->u.CJUMP.false, NULL);
+            ret = Tr_Cx(trues, falses, op);
+            break;
+        }
+        case A_gtOp:{
+            op = T_Cjump(T_gt, unEx(left), unEx(right), NULL, NULL);
+            patchList trues = PatchList(&op->u.CJUMP.true, NULL);
+            patchList falses = PatchList(&op->u.CJUMP.false, NULL);
+            ret = Tr_Cx(trues, falses, op);
+            break;
+        }
+        case A_geOp:{
+            op = T_Cjump(T_ge, unEx(left), unEx(right), NULL, NULL);
+            patchList trues = PatchList(&op->u.CJUMP.true, NULL);
+            patchList falses = PatchList(&op->u.CJUMP.false, NULL);
+            ret = Tr_Cx(trues, falses, op);
+            break;
+        }
         default:
             return NULL;
     }
     
-    printStm(T_Exp(unEx(ret)));
+    //printStm(T_Exp(unEx(ret)));
     
     return ret;
 }

@@ -59,13 +59,13 @@ F_accessList F_formals(F_frame frame) {return frame->formals;}
 
 F_access F_allocLocal(F_frame frame, bool escape){
     if(escape)
-        return InFrame(0);  // fix this
+        return InFrame(0);  // TODO: use actual offsets
     else 
         return InFrame(0);  // only doing inreg allocs
 }
 
 Temp_temp F_FP(void){
-    return Temp_newtemp();  // set the appropriate frame pointer
+    return Temp_newtemp();  // TODO: set the appropriate frame pointer
 }
 
 T_exp F_Exp(F_access acc, T_exp framePtr){
