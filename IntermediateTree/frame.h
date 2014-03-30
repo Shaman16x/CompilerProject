@@ -22,6 +22,17 @@ extern const int F_wordSize;    // size of registers
 T_exp F_Exp(F_access acc, T_exp framePtr);
 
 
-// Fragments, pg 172
 typedef struct F_frag_ * F_frag;
-//struct F_frag_ {enum {F_stringFrag, F_prog
+struct F_frag_ {enum {F_stringFrag, F_procFrag} kind;
+				union {
+					struct {Temp_label label;
+							string str;} stringg;
+					struct {T_stm body; F_frame frame;} proc;
+				} u;
+			};
+F_frag F_StringFrag(Temp_label label, string str);
+F_frag F_ProcFrag(T_stm body, F_frame frame);
+
+typedef struct F_fraglist_ *F_fragList;
+struct F_fragList_ {F_frag head; F_fragList tail;};
+F_fragList F_FragList(F_frag head, F_fragList tail);
