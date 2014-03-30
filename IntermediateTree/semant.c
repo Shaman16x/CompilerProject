@@ -147,7 +147,7 @@ expty   transVar(S_table venv, S_table tenv, A_var v, Tr_level level)
         // handle array accesses
         case A_subscriptVar: {
             expty arr = transVar(venv, tenv, v->u.subscript.var, level);
-            expty e =   transExp(venv, tenv, v->u.subscript.exp, level);
+            expty e =   transExp(venv, tenv, v->u.subscript.exp, level, NULL);
             
             // check that this var is an array
             if (arr.ty->kind == Ty_array) {
@@ -176,7 +176,7 @@ expty   transVar(S_table venv, S_table tenv, A_var v, Tr_level level)
 // Trans Exp
 //********************************************************************
 
-expty   transExp(S_table venv, S_table tenv, A_exp a, Tr_level level) {
+expty   transExp(S_table venv, S_table tenv, A_exp a, Tr_level level, Temp_label done) {
     printf("transExp: %d\n", a->kind); // DEBUG
     switch (a->kind) {
         case A_varExp:
@@ -208,7 +208,7 @@ expty   transExp(S_table venv, S_table tenv, A_exp a, Tr_level level) {
                 // check the types of the formal args
                 for (arg_list = a->u.call.args; arg_list && formals; 
                             arg_list = arg_list->tail, formals = formals->tail){
-                    arg = transExp(venv, tenv, arg_list->head, level);
+                    arg = transExp(venv, tenv, arg_list->head, level, done);
                     if (actual_ty(arg.ty) != actual_ty(formals->head)) {
                         EM_error(arg_list->head->pos, "mismatch of types");
                     }
@@ -232,8 +232,8 @@ expty   transExp(S_table venv, S_table tenv, A_exp a, Tr_level level) {
             break;
         case A_opExp: {
             A_oper oper = a->u.op.oper;
-            expty left = transExp(venv, tenv, a->u.op.left, level);
-            expty right = transExp(venv, tenv, a->u.op.right, level);
+            expty left = transExp(venv, tenv, a->u.op.left, level, done);
+            expty right = transExp(venv, tenv, a->u.op.right, level, done);
             switch (oper){
                 case A_plusOp:
                     if (left.ty->kind != Ty_int)
@@ -365,13 +365,13 @@ expty   transExp(S_table venv, S_table tenv, A_exp a, Tr_level level) {
             
             exp = expTy(NULL, Ty_Void());           // initialized to value of an empty sequence
             for(e = a->u.seq; e; e=e->tail)
-                exp = transExp(venv, tenv, e->head, level);
+                exp = transExp(venv, tenv, e->head, level, done);
 
             return exp;
         }
         case A_assignExp: {
             expty var = transVar(venv, tenv, a->u.assign.var, level);
-            expty exp = transExp(venv, tenv, a->u.assign.exp, level);
+            expty exp = transExp(venv, tenv, a->u.assign.exp, level, done);
             
             if (var.ty->kind == Ty_record && exp.ty->kind == Ty_nil){ // record was assignment nil case
             }
@@ -381,8 +381,8 @@ expty   transExp(S_table venv, S_table tenv, A_exp a, Tr_level level) {
             return expTy(Tr_assign(var.exp, exp.exp), Ty_Void());
         }
         case A_ifExp:{
-            expty test = transExp(venv, tenv, a->u.iff.test, level);
-            expty then = transExp(venv, tenv, a->u.iff.then, level);
+            expty test = transExp(venv, tenv, a->u.iff.test, level, done);
+            expty then = transExp(venv, tenv, a->u.iff.then, level, done);
             expty elsee;
             
             printf("Doing the if statement\n"); // DEBUG
@@ -393,7 +393,7 @@ expty   transExp(S_table venv, S_table tenv, A_exp a, Tr_level level) {
                 
             // check that else and then match types
             if(a->u.iff.elsee != NULL) {
-                elsee = transExp(venv, tenv, a->u.iff.elsee, level);
+                elsee = transExp(venv, tenv, a->u.iff.elsee, level, done);
                 if(then.ty->kind != elsee.ty->kind)
                     if(then.ty->kind != Ty_record && elsee.ty != Ty_Nil())
                         EM_error(a->u.iff.elsee->pos, "Else type must match Then type");
@@ -406,8 +406,9 @@ expty   transExp(S_table venv, S_table tenv, A_exp a, Tr_level level) {
         }
         
         case A_whileExp: {
-            expty test = transExp(venv, tenv, a->u.whilee.test, level);
-            expty body = transExp(venv, tenv, a->u.whilee.body, level);
+            Temp_label newDone = Temp_newlabel();
+            expty test = transExp(venv, tenv, a->u.whilee.test, level, done);
+            expty body = transExp(venv, tenv, a->u.whilee.body, level, newDone);
             
             // type check test for int
             if(test.ty->kind != Ty_int)
@@ -416,13 +417,14 @@ expty   transExp(S_table venv, S_table tenv, A_exp a, Tr_level level) {
             // type check body for void
             if(body.ty->kind != Ty_void)
                 EM_error(a->u.whilee.test->pos, "Body of while loop must produce no value");
-            return expTy(NULL, Ty_Void());
+            return expTy(Tr_while(test.exp, body.exp, newDone), Ty_Void());
         }
         
         case A_forExp: {
             // eval lo and hi
-            expty lo = transExp(venv, tenv, a->u.forr.lo, level);
-            expty hi = transExp(venv, tenv, a->u.forr.hi, level);
+            Temp_label newDone = Temp_newlabel();
+            expty lo = transExp(venv, tenv, a->u.forr.lo, level, done);
+            expty hi = transExp(venv, tenv, a->u.forr.hi, level, done);
             expty body;
             
             if(lo.ty->kind != Ty_int)
@@ -435,9 +437,9 @@ expty   transExp(S_table venv, S_table tenv, A_exp a, Tr_level level) {
             
             // assign new symbol
             // TODO: check that this is right, make sure this position is OK
-            transDec(venv, tenv, A_VarDec(a->pos, a->u.forr.var, NULL, a->u.forr.lo), level);
+            transDec(venv, tenv, A_VarDec(a->pos, a->u.forr.var, NULL, a->u.forr.lo), level, done);
             
-            body = transExp(venv, tenv, a->u.forr.body, level);
+            body = transExp(venv, tenv, a->u.forr.body, level, newDone);
             if(body.ty->kind != Ty_void)
                 EM_error(a->u.forr.body->pos, "body must produce no value");
             
@@ -448,7 +450,9 @@ expty   transExp(S_table venv, S_table tenv, A_exp a, Tr_level level) {
         }
         case A_breakExp:
             // TODO: what do we do with breaks?
-            return expTy(NULL, Ty_Void());
+            if(done == NULL)
+                EM_error(a->pos, "Break is not in for or while loop");
+            return expTy(Tr_break(done), Ty_Void());
             break;
             
         case A_letExp: {    // copied from the book's implementation
@@ -458,8 +462,8 @@ expty   transExp(S_table venv, S_table tenv, A_exp a, Tr_level level) {
             S_beginScope(venv);
             S_beginScope(tenv);
             for(d = a->u.let.decs; d; d=d->tail)
-                transDec(venv, tenv, d->head, level);
-            exp = transExp(venv, tenv, a->u.let.body, level);
+                transDec(venv, tenv, d->head, level, done);
+            exp = transExp(venv, tenv, a->u.let.body, level, done);
             S_endScope(tenv);
             S_endScope(venv);
             return exp;
@@ -468,8 +472,8 @@ expty   transExp(S_table venv, S_table tenv, A_exp a, Tr_level level) {
         case A_arrayExp:{
             
             Ty_ty t = S_look(tenv, a->u.array.typ);
-            expty size = transExp(venv, tenv, a->u.array.size, level);
-            expty init = transExp(venv, tenv, a->u.array.init, level);
+            expty size = transExp(venv, tenv, a->u.array.size, level, done);
+            expty init = transExp(venv, tenv, a->u.array.init, level, done);
 
             if (!t) {
                 EM_error(a->pos, "Array Type is undeclared");
@@ -494,12 +498,12 @@ expty   transExp(S_table venv, S_table tenv, A_exp a, Tr_level level) {
 // Trans Dec
 //********************************************************************
 
-void    transDec(S_table venv, S_table tenv, A_dec d, Tr_level level)
+void    transDec(S_table venv, S_table tenv, A_dec d, Tr_level level, Temp_label done)
 {
     printf("transDec\n"); // DEBUG
     switch(d->kind) {
         case A_varDec: {    // TODO: check type and nil assignments
-            expty e = transExp(venv, tenv, d->u.var.init, level);
+            expty e = transExp(venv, tenv, d->u.var.init, level, done);
             Ty_ty type;
             // check that type and initial value match
             if(d->u.var.typ != NULL){
@@ -633,7 +637,7 @@ void    transDec(S_table venv, S_table tenv, A_dec d, Tr_level level)
                     for(l=f->head->params, t=formalTys; l; l=l->tail, t=t->tail)
                         S_enter(venv, l->head->name, E_VarEntry(Tr_allocLocal(level, TRUE),t->head));
                 }
-                body = transExp(venv, tenv, f->head->body, level);
+                body = transExp(venv, tenv, f->head->body, level, done);
                 if(actual_ty(body.ty) != actual_ty(resultTy))
                     EM_error(d->pos, "Function return type does not match the body's");
                 S_endScope(venv);
@@ -716,7 +720,7 @@ void SEM_transProg(A_exp exp)
 {
     expty tree;
     
-    transExp(E_base_venv(), E_base_tenv(), exp, Tr_outermost());
+    transExp(E_base_venv(), E_base_tenv(), exp, Tr_outermost(), NULL);
     
     printf("Finished Type Checking\n");
 }

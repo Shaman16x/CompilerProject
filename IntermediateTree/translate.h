@@ -36,5 +36,6 @@ Tr_exp Tr_simpleVar(Tr_access acc, Tr_level level);
 Tr_exp Tr_assign(Tr_exp var, Tr_exp exp);
 Tr_exp Tr_let(void);
 Tr_exp Tr_if(Tr_exp test, Tr_exp then, Tr_exp elsee);
-Tr_exp Tr_while(void);
+Tr_exp Tr_while(Tr_exp test, Tr_exp body, Temp_label done);
 Tr_exp Tr_for(void);
+Tr_exp Tr_break(Temp_label done);

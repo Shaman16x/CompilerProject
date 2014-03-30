@@ -9,8 +9,8 @@ typedef struct expty expty;
 expty expTy(Tr_exp exp, Ty_ty ty);
 
 expty   transVar(S_table venv, S_table tenv, A_var v, Tr_level level);
-expty   transExp(S_table venv, S_table tenv, A_exp a, Tr_level level);
-void    transDec(S_table venv, S_table tenv, A_dec d, Tr_level level);
+expty   transExp(S_table venv, S_table tenv, A_exp a, Tr_level level, Temp_label done);
+void    transDec(S_table venv, S_table tenv, A_dec d, Tr_level level, Temp_label done);
 Ty_ty   transTy (              S_table tenv, A_ty a);
 
 Ty_tyList makeFormalTyList(S_table tenv, A_fieldList params);    // makes a list of type based on params

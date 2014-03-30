@@ -157,7 +157,7 @@ Tr_exp Tr_simpleVar(Tr_access acc, Tr_level level)
 {
     Tr_exp ret = NULL;  // TODO: turn this into a thing,pg 160
     ret = Tr_Ex(F_Exp(acc->access, T_Temp(F_FP())));
-    printStm(T_Exp(unEx(ret)));
+    // printStm(T_Exp(unEx(ret)));
     return ret;
 }
 
@@ -251,7 +251,7 @@ Tr_exp Tr_if(Tr_exp test, Tr_exp then, Tr_exp elsee){
                 T_Seq(T_Label(tr),
                   T_Seq(T_Exp(unEx(then)),
                     T_Label(fl))));
-        printStm(ret);
+        // printStm(ret);
         return Tr_Nx(ret);
     }
     else {  // both then and else, then statement jumps to end
@@ -261,11 +261,34 @@ Tr_exp Tr_if(Tr_exp test, Tr_exp then, Tr_exp elsee){
                     T_Seq(T_Jump(T_Name(end), Temp_LabelList(end, NULL)),
                       T_Seq(T_Label(fl),
                         T_Seq(T_Exp(unEx(elsee)), T_Label(end)))))));
-        printStm(ret);
+        //printStm(ret);  // DEBUG
         return Tr_Nx(ret);
     }
 }
 
+//TODO: this, also break handling 169
+Tr_exp Tr_while(Tr_exp test, Tr_exp body, Temp_label done){
+    Temp_label head = Temp_newlabel(), loop = Temp_newlabel();
+    T_stm stm;
+    struct Cx c = unCx(test);
+    doPatch(c.trues, loop);
+    doPatch(c.falses, done);
+    stm = T_Seq(T_Label(head),
+           T_Seq(c.stm,
+             T_Seq(T_Label(loop),
+               T_Seq(T_Exp(unEx(body)),
+                 T_Seq(T_Jump(T_Name(head), Temp_LabelList(head, NULL)),
+                   T_Label(done))))));
+    printStm(stm);
+    return Tr_Nx(stm);
+}
 
 
+Tr_exp Tr_for(void);
+
+
+Tr_exp Tr_break(Temp_label done){
+    //printStm(T_Jump(T_Name(done), Temp_LabelList(done, NULL))); 
+    return Tr_Nx(T_Jump(T_Name(done), Temp_LabelList(done, NULL)));
+}
 
