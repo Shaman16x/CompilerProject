@@ -68,8 +68,6 @@ static T_exp unEx(Tr_exp e){
         doPatch(e->u.cx.trues, t);
         doPatch(e->u.cx.falses, f);
         
-    
-        
         return T_Eseq(T_Move(T_Temp(r), T_Const(1)),
                 T_Eseq(e->u.cx.stm,
                  T_Eseq(T_Label(f),
@@ -84,8 +82,23 @@ static T_exp unEx(Tr_exp e){
 }
 
 static T_stm unNx(Tr_exp e);        // TODO: this
-static struct Cx unCx(Tr_exp e);    // TODO: this
-    
+static struct Cx unCx(Tr_exp e){    // TODO: this
+    switch(e->kind){
+    case Tr_ex:{
+        struct Cx c;
+        c.stm = T_Cjump(T_ne, e->u.ex, T_Const(0), NULL, NULL); // e!=0 tests for nonzeros
+        c.trues = PatchList(&c.stm->u.CJUMP.true, NULL);
+        c.falses = PatchList(&c.stm->u.CJUMP.false, NULL);
+
+        return c; 
+    }
+    case Tr_cx:
+        return e->u.cx;
+    case Tr_nx:
+        break;
+    }
+}    
+
 struct Tr_access_ {Tr_level level; F_access access;};
 
 Tr_accessList Tr_AccessList(Tr_access head, Tr_accessList tail)
@@ -215,6 +228,44 @@ Tr_exp Tr_oper(A_oper oper, Tr_exp left, Tr_exp right)
     
     return ret;
 }
+
+Tr_exp Tr_assign(Tr_exp var, Tr_exp exp)
+{
+    T_stm ret;
+    
+    ret = T_Move(T_Mem(unEx(var)), unEx(exp)); 
+    //printStm(ret);
+    return Tr_Nx(ret);
+}
+
+Tr_exp Tr_if(Tr_exp test, Tr_exp then, Tr_exp elsee){
+    T_stm ret = NULL;
+    Temp_label tr = Temp_newlabel(), fl = Temp_newlabel(), end = Temp_newlabel();
+    struct Cx c = unCx(test);
+    
+    doPatch(c.trues, tr);   // patch the test
+    doPatch(c.falses, fl);
+    
+    if(elsee == NULL){  // only a then statment
+        ret = T_Seq(c.stm,
+                T_Seq(T_Label(tr),
+                  T_Seq(T_Exp(unEx(then)),
+                    T_Label(fl))));
+        printStm(ret);
+        return Tr_Nx(ret);
+    }
+    else {  // both then and else, then statement jumps to end
+        ret = T_Seq(c.stm,
+                T_Seq(T_Label(tr),
+                  T_Seq(T_Exp(unEx(then)),
+                    T_Seq(T_Jump(T_Name(end), Temp_LabelList(end, NULL)),
+                      T_Seq(T_Label(fl),
+                        T_Seq(T_Exp(unEx(elsee)), T_Label(end)))))));
+        printStm(ret);
+        return Tr_Nx(ret);
+    }
+}
+
 
 
 

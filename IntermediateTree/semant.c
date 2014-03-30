@@ -184,7 +184,7 @@ expty   transExp(S_table venv, S_table tenv, A_exp a, Tr_level level) {
             return transVar(venv, tenv, a->u.var, level);
         case A_nilExp:
             // not sure about this one
-            return expTy(NULL, Ty_Nil());
+            return expTy(Tr_int(0), Ty_Nil());  // 0 is nil?
             break;
         case A_intExp:
             return expTy(Tr_int(a->u.intt), Ty_Int());
@@ -378,12 +378,14 @@ expty   transExp(S_table venv, S_table tenv, A_exp a, Tr_level level) {
             else if (var.ty->kind != exp.ty->kind)
                 EM_error(a->u.assign.exp->pos, "Mismatch of type in assignment");
                 
-            return expTy(NULL, Ty_Void());
+            return expTy(Tr_assign(var.exp, exp.exp), Ty_Void());
         }
         case A_ifExp:{
             expty test = transExp(venv, tenv, a->u.iff.test, level);
             expty then = transExp(venv, tenv, a->u.iff.then, level);
             expty elsee;
+            
+            printf("Doing the if statement\n"); // DEBUG
             
             // check E for type int
             if(test.ty->kind != Ty_int)
@@ -395,12 +397,12 @@ expty   transExp(S_table venv, S_table tenv, A_exp a, Tr_level level) {
                 if(then.ty->kind != elsee.ty->kind)
                     if(then.ty->kind != Ty_record && elsee.ty != Ty_Nil())
                         EM_error(a->u.iff.elsee->pos, "Else type must match Then type");
-                return then;    // return then's type
+                return expTy(Tr_if(test.exp, then.exp, elsee.exp), then.ty);    // return then's type
             }
             else if (then.ty != Ty_Void()){
                 EM_error(a->u.iff.then->pos, "Then statement must not return a value");
             }
-            return expTy(NULL, Ty_Void());
+            return expTy(Tr_if(test.exp, then.exp, NULL), Ty_Void());
         }
         
         case A_whileExp: {
