@@ -155,6 +155,7 @@ void printStm(T_stm stm)
 {
     FILE *f = fopen("debug.txt", "a");
     T_stmList l = T_StmList(stm, NULL);
+    printf("Printing statement\n");
     printStmList(f, l);
     fclose(f);
 }
@@ -168,7 +169,12 @@ Tr_exp Tr_int(int i)
 Tr_exp Tr_simpleVar(Tr_access acc, Tr_level level)
 {
     Tr_exp ret = NULL;  // TODO: turn this into a thing,pg 160
+    printf("entered simpleVar\n");
+    if (acc->access == NULL) printf("access problem\n");
+    T_Temp(F_FP());
+    printf("creating ret\n");
     ret = Tr_Ex(F_Exp(acc->access, T_Temp(F_FP())));
+    printf("done\n");
     // printStm(T_Exp(unEx(ret)));
     return ret;
 }
@@ -313,9 +319,19 @@ Tr_exp Tr_while(Tr_exp test, Tr_exp body, Temp_label done){
     return Tr_Nx(stm);
 }
 
-
-Tr_exp Tr_for(void);
-
+Tr_exp Tr_for(Tr_exp index, Tr_exp lowAssign, Tr_exp highValue, Tr_exp body, Temp_label done){
+    T_stm stm;
+    Temp_label head = Temp_newlabel(), loop = Temp_newlabel();
+    printf("translating for loop\n");
+    stm = T_Seq(unNx(lowAssign),
+            T_Seq(T_Label(head),
+              T_Seq(T_Cjump(T_le, T_Mem(unEx(index)), unEx(highValue), loop, done),
+                T_Seq(T_Label(loop),
+                  T_Seq(unNx(body),
+                    T_Seq(T_Jump(T_Name(head), Temp_LabelList(head, NULL)),
+                      T_Label(done)))))));
+    return Tr_Nx(stm);
+}
 
 Tr_exp Tr_break(Temp_label done){
     //printStm(T_Jump(T_Name(done), Temp_LabelList(done, NULL))); 

@@ -423,35 +423,44 @@ expty   transExp(S_table venv, S_table tenv, A_exp a, Tr_level level, Temp_label
         case A_forExp: {
             // eval lo and hi
             Temp_label newDone = Temp_newlabel();
+            Tr_exp index, dec;
             expty lo = transExp(venv, tenv, a->u.forr.lo, level, done);
             expty hi = transExp(venv, tenv, a->u.forr.hi, level, done);
-            expty body;
+            expty body, ret;
+            E_enventry temp;
             
+            printf("found a for loop\n");
+            
+            // check range
             if(lo.ty->kind != Ty_int)
                 EM_error(a->u.forr.lo->pos, "Low end of range must be an integer");
             if(hi.ty->kind != Ty_int)
                 EM_error(a->u.forr.hi->pos, "High end of range must be an integer");
-            // new scope for for loop
+
+            // new scopes for the FOR loop
             S_beginScope(venv);
             S_beginScope(tenv);
-            
             // assign new symbol
             // TODO: check that this is right, make sure this position is OK
-            transDec(venv, tenv, A_VarDec(a->pos, a->u.forr.var, NULL, a->u.forr.lo), level, done);
-            
+            dec = transDec(venv, tenv, A_VarDec(a->pos, a->u.forr.var, NULL, a->u.forr.lo), level, done);
             body = transExp(venv, tenv, a->u.forr.body, level, newDone);
+
             if(body.ty->kind != Ty_void)
                 EM_error(a->u.forr.body->pos, "body must produce no value");
-            
+
             S_endScope(tenv);
             S_endScope(venv);
             // exit for loop scope
-            return expTy(NULL, Ty_Void());
+            
+            // get an access to index var
+            temp = S_look(venv, a->u.forr.var);
+            //ret = expTy(Tr_for(Tr_simpleVar(temp->u.var.access, level), dec, hi.exp, body.exp, newDone), Ty_Void());
+            return expTy(Tr_nop(), Ty_Void());
         }
         case A_breakExp:
             // TODO: what do we do with breaks?
             if(done == NULL)
-                EM_error(a->pos, "Break is not in for or while loop");
+                EM_error(a->pos, "Break is not in FOR or WHILE loop");
             return expTy(Tr_break(done), Ty_Void());
             break;
             
