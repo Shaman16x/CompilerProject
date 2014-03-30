@@ -126,10 +126,9 @@ Tr_accessList Tr_AccessList(Tr_access head, Tr_accessList tail)
 Tr_level Tr_outermost(void)
 {
     Tr_level l = malloc(sizeof(*l));
-    
     l->parent = NULL;
-    l->name = NULL;
-    l->frame = NULL;
+    l->name = Temp_newlabel();
+    l->frame = F_newFrame(l->name, NULL);
     
     return l;
 }

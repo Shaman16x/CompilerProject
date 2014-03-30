@@ -420,7 +420,7 @@ expty   transExp(S_table venv, S_table tenv, A_exp a, Tr_level level, Temp_label
             return expTy(Tr_while(test.exp, body.exp, newDone), Ty_Void());
         }
         
-        case A_forExp: {
+        case A_forExp: {        //TODO: FIX FOR LOOPS
             // eval lo and hi
             Temp_label newDone = Temp_newlabel();
             Tr_exp index, dec;
@@ -459,10 +459,11 @@ expty   transExp(S_table venv, S_table tenv, A_exp a, Tr_level level, Temp_label
         }
         case A_breakExp:
             // TODO: what do we do with breaks?
-            if(done == NULL)
+            if(done == NULL){
                 EM_error(a->pos, "Break is not in FOR or WHILE loop");
+                return expTy(Tr_nop(), Ty_Void());  // holds place of erroneous break
+            }
             return expTy(Tr_break(done), Ty_Void());
-            break;
             
         case A_letExp: {    // copied from the book's implementation
             A_decList d;
@@ -488,7 +489,7 @@ expty   transExp(S_table venv, S_table tenv, A_exp a, Tr_level level, Temp_label
 
             if (!t) {
                 EM_error(a->pos, "Array Type is undeclared");
-                return expTy(NULL, Ty_Array(Ty_Int())); // placeholder for nonexistent types
+                return expTy(Tr_int(0), Ty_Array(Ty_Int())); // placeholder for nonexistent types
             }
             else if (t->kind != Ty_array)
                 EM_error(a->pos, "Type is not an array");

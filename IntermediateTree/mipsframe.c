@@ -17,21 +17,25 @@ struct F_access_
 F_accessList F_AccessList(F_access head, F_accessList tail)
 {
     F_accessList l = malloc(sizeof(*l));
-    
     l->head = head;
     l->tail = tail;
-    
     return l;
+}
+
+static int nextAccessIndex(F_accessList l){
+    F_accessList temp;
+    int i = -F_wordSize;
+    for(temp = l; temp; temp=temp->tail)
+        i-=F_wordSize;
+    return i;
 }
 
 // mips frame allocation
 static F_access InFrame(int offset)
 {
     F_access a = malloc(sizeof(*a));
-    
     a->kind = inFrame;
     a->u.offset = offset;
-    
     return a;
 }
 
@@ -42,13 +46,14 @@ F_frame F_newFrame(Temp_label name, U_boolList formals){
     F_frame f = malloc(sizeof(*f));
     U_boolList l;
     bool b;
-    int offset = 0;
+    int offset = -(F_wordSize); // assumes base frame is reserved?
     
     f->name = name;
     
+    // create accesses for all formals
     for(l = formals; l; l=l->tail){
         f->formals = F_AccessList(InFrame(offset), f->formals);
-        offset += 4;
+        offset -=F_wordSize;
     }
     
     return f;
@@ -57,11 +62,16 @@ F_frame F_newFrame(Temp_label name, U_boolList formals){
 Temp_label F_name(F_frame frame) {return frame->name;}
 F_accessList F_formals(F_frame frame) {return frame->formals;}
 
+
 F_access F_allocLocal(F_frame frame, bool escape){
-    if(escape)
-        return InFrame(0);  // TODO: use actual offsets
-    else 
-        return InFrame(0);  // only doing inreg allocs
+    F_access a;
+    if(frame && escape){
+        a = InFrame(nextAccessIndex(frame->formals));
+        frame->formals = F_AccessList(a, frame->formals);
+        return a;  // TODO: verify
+    }
+    else
+        return InFrame(0);  // only doing inreg allocs this should not hit
 }
 
 Temp_temp F_FP(void){
