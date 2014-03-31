@@ -74,8 +74,8 @@ Ty_ty actual_ty(Ty_ty t)
     while(temp != NULL && temp->kind == Ty_name)
     {
         //temp = S_look(
-        Ty_print(temp);
-        printf("\n");
+       // Ty_print(temp);
+       // printf("\n");
         temp = temp->u.name.ty;
     }
     
@@ -88,13 +88,13 @@ Ty_ty actual_ty_v2(S_table tenv, Ty_ty t)
 {
     Ty_ty temp = t;
     
-    printf("actual_ty\n");
+    //printf("actual_ty\n");
     while(temp != NULL && temp->kind == Ty_name)
     {
-        Ty_print(temp);
-        printf("\n");
+       // Ty_print(temp);
+       // printf("\n");
         if(temp->u.name.ty == NULL){
-            printf("this is null");
+           // printf("this is null");
             temp = S_look(tenv, temp->u.name.sym);
         }
         else
@@ -109,7 +109,7 @@ Ty_ty actual_ty_v2(S_table tenv, Ty_ty t)
 
 expty   transVar(S_table venv, S_table tenv, A_var v, Tr_level level)
 {
-    printf("transVar\n"); // DEBUG
+   // printf("transVar\n"); // DEBUG
     switch(v->kind){
         case A_simpleVar:{
             E_enventry x = S_look(venv, v->u.simple);
@@ -179,7 +179,7 @@ expty   transVar(S_table venv, S_table tenv, A_var v, Tr_level level)
 //********************************************************************
 
 expty   transExp(S_table venv, S_table tenv, A_exp a, Tr_level level, Temp_label done) {
-    printf("transExp: %d\n", a->kind); // DEBUG
+   // printf("transExp: %d\n", a->kind); // DEBUG
     switch (a->kind) {
         case A_varExp:
             // translate variable
@@ -429,7 +429,7 @@ expty   transExp(S_table venv, S_table tenv, A_exp a, Tr_level level, Temp_label
             expty body, ret;
             E_enventry temp;
             
-            printf("found a for loop\n");
+          //  printf("found a for loop\n");
             
             // check range
             if(lo.ty->kind != Ty_int)
@@ -513,7 +513,7 @@ expty   transExp(S_table venv, S_table tenv, A_exp a, Tr_level level, Temp_label
 
 Tr_exp  transDec(S_table venv, S_table tenv, A_dec d, Tr_level level, Temp_label done)
 {
-    printf("transDec\n"); // DEBUG
+   // printf("transDec\n"); // DEBUG
     switch(d->kind) {
         case A_varDec: {    // TODO: check type and nil assignments
             expty e = transExp(venv, tenv, d->u.var.init, level, done);
@@ -589,7 +589,7 @@ Tr_exp  transDec(S_table venv, S_table tenv, A_dec d, Tr_level level, Temp_label
                 check = S_look(tenv, l->head->name);   // for recursive definitions
                 
                 if(check->kind == Ty_record){
-                    printf("Fixing record\n");  // DEBUG
+                //    printf("Fixing record\n");  // DEBUG
                     rec = check->u.record;
                     for(rec; rec; rec=rec->tail){
                         if(rec->head->ty->kind == Ty_name){ // clear up name definitions
@@ -613,7 +613,7 @@ Tr_exp  transDec(S_table venv, S_table tenv, A_dec d, Tr_level level, Temp_label
             expty body;
             U_boolList boolList = NULL;
             Temp_label label;
-            printf("funcDec\n");
+          //  printf("funcDec\n");
             // f->result == NULL mean no return value
             
             // added pointers to all functions
@@ -689,7 +689,7 @@ Ty_tyList makeFormalTyList(S_table tenv, A_fieldList params){
 Ty_ty   transTy (              S_table tenv, A_ty a)
 {
     Ty_ty t = NULL;
-    printf("transTy\n"); // DEBUG
+  //  printf("transTy\n"); // DEBUG
     switch(a->kind){
         case A_nameTy:
             t = S_look(tenv, a->u.name);
@@ -714,12 +714,12 @@ Ty_ty   transTy (              S_table tenv, A_ty a)
             break;
         }
         case A_arrayTy:
-            printf("translating array\n");
+         //   printf("translating array\n");
             t = Ty_Array(S_look(tenv, a->u.array));
 
             break;
         default:
-            printf("no kind?\n");
+         //   printf("no kind?\n");
             break;
     }
     
@@ -727,9 +727,9 @@ Ty_ty   transTy (              S_table tenv, A_ty a)
         EM_error(a->pos, "Unknown type, defaulting to int");
         t = Ty_Int();
     }
-    printf("Type is ");
-    Ty_print(t);
-    printf("\n");
+//printf("Type is ");
+  //  Ty_print(t);
+  //  printf("\n");
     
     return t;
 }
@@ -742,5 +742,4 @@ void SEM_transProg(A_exp exp)
     
     printf("Finished Type Checking\n");
 }
-
 
