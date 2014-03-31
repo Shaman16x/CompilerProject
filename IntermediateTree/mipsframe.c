@@ -83,4 +83,27 @@ T_exp F_Exp(F_access acc, T_exp framePtr){
 }
 
 
+F_frag F_StringFrag(Temp_label label, string str){
+	
+	F_frag s = malloc(sizeof(*s));
+	s->label = label;
+	s->str = str;	
+	return s;
+}
+
+F_frag F_ProcFrag(T_stm body, F_frame frame){
+	F_frag s = malloc(sizeof(*s));
+	s->body = body;
+	s->frame = frame;
+	return s;
+}
+
+F_fragList F_FragList(F_frag head, F_fragList tail){
+	F_fragList l =  = malloc(sizeof(*l));
+	l->head = head;
+    l->tail = tail;
+    return l;
+}
+
+
 
