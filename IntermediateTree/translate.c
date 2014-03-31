@@ -6,7 +6,7 @@ typedef struct patchList_ *patchList;
 struct patchList_ {Temp_label *head; patchList tail;};
 static patchList PatchList(Temp_label *head, patchList tail)
 {
-    patchList p = malloc(sizeof(*p));
+    patchList p = checked_malloc(sizeof(*p));
     p->head = head;
     p->tail = tail;
     return p;
@@ -35,14 +35,14 @@ struct Tr_exp_
 // used to create ex, nx, and cx
 static Tr_exp Tr_Ex(T_exp ex)
 {
-    Tr_exp r = malloc(sizeof(*r));
+    Tr_exp r = checked_malloc(sizeof(*r));
     r->kind = Tr_ex;
     r->u.ex = ex;
     return r;
 }
 static Tr_exp Tr_Nx(T_stm nx)
 {
-    Tr_exp r = malloc(sizeof(*r));
+    Tr_exp r = checked_malloc(sizeof(*r));
     r->kind = Tr_nx;
     r->u.nx = nx;
     return r;
@@ -50,7 +50,7 @@ static Tr_exp Tr_Nx(T_stm nx)
 
 static Tr_exp Tr_Cx(patchList trues, patchList falses, T_stm stm)
 {
-    Tr_exp r = malloc(sizeof(*r));
+    Tr_exp r = checked_malloc(sizeof(*r));
     r->kind = Tr_cx;
     r->u.cx.trues = trues;
     r->u.cx.falses = falses;
@@ -86,11 +86,20 @@ static T_stm unNx(Tr_exp e){        // TODO: this
     case Tr_ex:
         return T_Exp(e->u.ex);
     case Tr_cx:{
-        return e->u.cx.stm;// TODO: write the appropriate conversion
+        Temp_temp r = Temp_newtemp();
+			Temp_label t = Temp_newlabel(), f = Temp_newlabel();
+			doPatch(e->u.cx.trues, t);
+			doPatch(e->u.cx.falses, f);
+			return T_Exp(T_Eseq(T_Move(T_Temp(r), T_Const(1)),
+				T_Eseq(e->u.cx.stm,
+					T_Eseq(T_Label(f), 
+						T_Eseq(T_Move(T_Temp(r), T_Const(0)),
+							T_Eseq(T_Label(t), T_Temp(r)))))));
     }
     case Tr_nx:
         return e->u.nx;
     }
+ 
 }
 
 
@@ -115,7 +124,7 @@ struct Tr_access_ {Tr_level level; F_access access;};
 
 Tr_accessList Tr_AccessList(Tr_access head, Tr_accessList tail)
 {
-    Tr_accessList t = malloc(sizeof(*t));
+    Tr_accessList t = checked_malloc(sizeof(*t));
     
     t->head = head;
     t->tail = tail;
@@ -125,7 +134,7 @@ Tr_accessList Tr_AccessList(Tr_access head, Tr_accessList tail)
 
 Tr_level Tr_outermost(void)
 {
-    Tr_level l = malloc(sizeof(*l));
+    Tr_level l = checked_malloc(sizeof(*l));
     l->parent = NULL;
     l->name = Temp_newlabel();
     l->frame = F_newFrame(l->name, NULL);
@@ -135,7 +144,7 @@ Tr_level Tr_outermost(void)
 
 Tr_level Tr_newLevel(Tr_level parent, Temp_label name, U_boolList formals)
 {
-    Tr_level l = malloc(sizeof(*l));
+    Tr_level l = checked_malloc(sizeof(*l));
     l->parent = parent;
     l->name = name;
     l->frame = F_newFrame(l->name, formals);
@@ -144,7 +153,7 @@ Tr_level Tr_newLevel(Tr_level parent, Temp_label name, U_boolList formals)
 
 Tr_access Tr_allocLocal(Tr_level level, bool escape)
 {
-    Tr_access a = malloc(sizeof(*a));
+    Tr_access a = checked_malloc(sizeof(*a));
     a->level = level;
     a->access = F_allocLocal(level->frame, escape);
     return a;
@@ -166,8 +175,10 @@ Tr_exp Tr_int(int i)
 }
 
 Tr_exp Tr_string(string s){
+	 F_fragList sl = NULL;
     Temp_label lab = Temp_newlabel();
-    // F_String(lab, s); TODO: make this function, allocs values in heap
+    F_frag fragment = F_StringFrag(lab, s);
+	 sl = F_FragList(fragment, sl);
     return Tr_Ex(T_Name(lab));
 }
 
