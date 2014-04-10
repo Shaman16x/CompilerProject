@@ -21,7 +21,7 @@ static void emit(AS_instr instr);
 static Temp_temp munchExp(T_exp expr);
 static void munchStm(T_stm stm);
 
-Temp_tempList L(Temp_temp h, Temp_tempListt) {
+Temp_tempList L(Temp_temp h, Temp_tempList t) {
 	return Temp_tempList(h,t);
 }
 
@@ -141,7 +141,7 @@ static void munchStm(T_stm s) {
 		case T_JUMP:{
 			
 		}
-		case T_CUMP:{
+		case T_CJUMP:{
 			
 		}
 		case T_NAME:{
