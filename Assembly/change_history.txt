@@ -1,0 +1,19 @@
+/*
+ * Tiger Compiler Assignment 5
+ *   IR generation
+ * By Ming Zhou & Kuo-shih Tseng
+ */
+
+0.7
+* Fixed a bug for translating conditional jump in expression sequence
+(Wonsuk Oh)
+
+* Fixed a bug for argument list population in IR generation
+(Gautham Beeraka)
+
+0.6
+* Improved compatibility of pointer manipulation
+* Fixed bugs with type-checking in function declaration 
+
+0.5
+* Added implicit main function to the result list

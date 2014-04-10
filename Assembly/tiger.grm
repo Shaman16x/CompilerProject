@@ -1,0 +1,271 @@
+%{
+/* Assignment 4
+ * 
+ * TIGER's Type Checking
+ *
+ * Ming Zhou (4465225)
+ **/
+#include <stdio.h>
+#include "util.h"
+#include "symbol.h" 
+#include "errormsg.h"
+#include "absyn.h"
+
+int yylex(void); /* function prototype */
+
+A_exp absyn_root;
+
+void yyerror(char *s)
+{
+ EM_error(EM_tokPos, "%s", s);
+}
+%}
+
+
+%union {
+  int pos;
+  int ival;
+  string sval;
+
+  A_var var;
+
+  A_exp exp;
+  A_expList expList;
+
+  A_efieldList efieldList;
+  A_efield efield;
+
+  A_decList decList;
+  A_dec dec;
+
+  A_fundec fundec;
+  A_fieldList fieldList;
+  A_field field;
+
+  A_namety typedec;
+  A_ty ty;
+}
+
+%token <sval> ID 
+%token <ival> INT 
+%token <sval> STRING
+
+%type <exp> exp 
+%type <exp> op_exp
+%type <exp> for_exp
+%type <exp> array_exp
+%type <exp> while_exp
+%type <exp> record_exp
+%type <exp> seq_exp
+%type <exp> assign_exp
+%type <exp> if_then_exp
+%type <exp> break_exp
+%type <exp> let_exp
+%type <exp> seq_in_let_exp
+%type <var> var_exp
+%type <exp> nil_exp
+%type <exp> int_exp
+%type <exp> string_exp
+%type <exp> call_exp
+%type <exp> null_exp
+
+%type <var> non_simple_var
+%type <var> subscript_var
+%type <var> field_var
+
+%type <expList> arg_list
+%type <expList> sub_arg_list
+%type <expList> seq_list
+
+%type <efieldList> field_list
+%type <efieldList> sub_field_list
+%type <efield> field
+
+%type <decList> dec_list
+
+%type <fundec> func_dec
+%type <typedec> type_dec
+%type <dec> var_dec
+%type <fieldList> type_field_list
+%type <fieldList> sub_type_field_list
+%type <field> type_field
+
+%type <ty> type
+
+%token 
+  COMMA COLON SEMICOLON LPAREN RPAREN LBRACK RBRACK 
+  LBRACE RBRACE DOT 
+  PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE
+  AND OR ASSIGN
+  ARRAY IF THEN ELSE WHILE FOR TO DO LET IN END OF 
+  BREAK NIL
+  FUNCTION VAR TYPE 
+
+%start program
+
+%nonassoc IF THEN WHILE DO FOR TO OF
+%left ELSE
+
+%nonassoc ASSIGN
+%left OR AND
+%nonassoc EQ NEQ LT LE GT GE
+%left PLUS MINUS 
+%left TIMES DIVIDE
+%nonassoc UMINUS
+
+%%
+
+program:	exp	{ absyn_root=$1; }
+
+exp:	op_exp		{ $$ = $1; }
+   |	for_exp		{ $$ = $1; }
+   |	array_exp	{ $$ = $1; }
+   |	while_exp	{ $$ = $1; }
+   |	record_exp	{ $$ = $1; }
+   |	seq_exp		{ $$ = $1; }
+   |	assign_exp	{ $$ = $1; }
+   |	if_then_exp	{ $$ = $1; }
+   |	break_exp	{ $$ = $1; }
+   |	let_exp		{ $$ = $1; }
+   |	var_exp		{ $$ = A_VarExp(EM_tokPos, $1); }
+   |	nil_exp		{ $$ = $1; }
+   |	int_exp		{ $$ = $1; }
+   |	string_exp	{ $$ = $1; }
+   |	call_exp	{ $$ = $1; }
+   |	null_exp	{ $$ = $1; }
+
+var_exp:	ID	{ $$ = A_SimpleVar(EM_tokPos, S_Symbol($1)); }
+       |	non_simple_var	{ $$ = $1; }
+
+non_simple_var: subscript_var	{ $$ = $1; }
+              |	field_var	{ $$ = $1; }
+
+field_var:	var_exp DOT ID	{ $$ = A_FieldVar(EM_tokPos, $1, S_Symbol($3)); }
+
+subscript_var:	ID LBRACK exp RBRACK			{ $$ = A_SubscriptVar(EM_tokPos, A_SimpleVar(EM_tokPos, S_Symbol($1)), $3); }
+             |  non_simple_var LBRACK exp RBRACK 	{ $$ = A_SubscriptVar(EM_tokPos, $1, $3); }	
+
+nil_exp:	NIL	{ $$ = A_NilExp(EM_tokPos); }
+
+int_exp:	INT	{ $$ = A_IntExp(EM_tokPos, $1); }
+
+string_exp:	STRING	{ $$ = A_StringExp(EM_tokPos, $1); }
+
+call_exp:	ID LPAREN arg_list RPAREN	{ $$ = A_CallExp(EM_tokPos, S_Symbol($1), $3); }
+
+arg_list:	/* empty */	{ $$ = A_ExpList(NULL, NULL); }	
+	|	sub_arg_list	{ $$ = $1; }
+
+sub_arg_list:	exp	{ $$ = A_ExpList($1, NULL); }
+	    |	exp COMMA sub_arg_list { $$ = A_ExpList($1, $3); }	 
+
+op_exp:	exp PLUS exp	{ $$ = A_OpExp(EM_tokPos, A_plusOp, $1, $3); }
+      |	exp MINUS exp	{ $$ = A_OpExp(EM_tokPos, A_minusOp, $1, $3); }
+      |	exp TIMES exp	{ $$ = A_OpExp(EM_tokPos, A_timesOp, $1, $3); }
+      |	exp DIVIDE exp	{ $$ = A_OpExp(EM_tokPos, A_divideOp, $1, $3); }
+      |	exp EQ exp	{ $$ = A_OpExp(EM_tokPos, A_eqOp, $1, $3); }
+      |	exp NEQ exp	{ $$ = A_OpExp(EM_tokPos, A_neqOp, $1, $3); }
+      |	exp LT exp	{ $$ = A_OpExp(EM_tokPos, A_ltOp, $1, $3); }
+      |	exp LE exp	{ $$ = A_OpExp(EM_tokPos, A_leOp, $1, $3); }
+      |	exp GT exp	{ $$ = A_OpExp(EM_tokPos, A_gtOp, $1, $3); }
+      |	exp GE exp	{ $$ = A_OpExp(EM_tokPos, A_geOp, $1, $3); }
+      |	exp AND exp	{ $$ = A_IfExp(EM_tokPos, $1, $3, A_IntExp(EM_tokPos, 0)); } //Translate to If-Then-Else
+      |	exp OR exp	{ $$ = A_IfExp(EM_tokPos, $1, A_IntExp(EM_tokPos, 1), $3); } //Translate to If-Then-Else
+      | LPAREN exp RPAREN	{ $$ = A_SeqExp(EM_tokPos, A_ExpList($2, NULL)); }
+      | MINUS exp %prec UMINUS	{ $$ = A_OpExp(EM_tokPos, A_minusOp, A_IntExp(EM_tokPos, 0), $2); }
+
+record_exp:	ID LBRACE field_list RBRACE	{ $$ = A_RecordExp(EM_tokPos, /*Type*/ S_Symbol($1), $3); }
+
+field_list:	/* empty */	{ $$ = A_EfieldList(NULL, NULL); }	
+	|	sub_field_list  { $$ = $1; }
+
+sub_field_list:	field				{ $$ = A_EfieldList($1, NULL); }
+	      |	field COMMA sub_field_list	{ $$ = A_EfieldList($1, $3); }
+
+field:	ID EQ exp	{ $$ = A_Efield(S_Symbol($1), $3); }
+
+array_exp:	ID LBRACK exp RBRACK OF exp	{ $$ = A_ArrayExp(EM_tokPos, S_Symbol($1), $3, $6); }
+
+seq_exp:	LPAREN seq_list RPAREN	{ $$ = A_SeqExp(EM_tokPos, $2); }
+
+seq_list:	exp SEMICOLON exp	{ $$ = A_ExpList($1, A_ExpList($3, NULL)); }
+	|	exp SEMICOLON seq_list	{ $$ = A_ExpList($1, $3); }
+
+null_exp:	LPAREN RPAREN		{ $$ = A_SeqExp(EM_tokPos, A_ExpList(NULL, NULL)); }
+
+assign_exp:	var_exp ASSIGN exp	{ $$ = A_AssignExp(EM_tokPos, $1, $3); }
+
+if_then_exp:	IF exp THEN exp			{ $$ = A_IfExp(EM_tokPos, $2, $4, NULL); }
+           |	IF exp THEN exp ELSE exp	{ $$ = A_IfExp(EM_tokPos, $2, $4, $6); }
+
+while_exp:	WHILE exp DO exp	{ $$ = A_WhileExp(EM_tokPos, $2, $4); }
+
+break_exp:	BREAK	{ $$ = A_BreakExp(EM_tokPos); }
+
+for_exp:	FOR ID ASSIGN exp TO exp DO exp	{ $$ = A_ForExp(EM_tokPos, S_Symbol($2), $4, $6, $8); }
+
+let_exp:	LET dec_list IN END		{ $$ = A_LetExp(EM_tokPos, $2, NULL); }
+       |	LET dec_list IN seq_in_let_exp	{ $$ = A_LetExp(EM_tokPos, $2, $4); }	/* seq_in_let_exp is merely a sematic hook for inserting code. */
+
+seq_in_let_exp:	exp END				{ $$ = A_SeqExp(EM_tokPos, A_ExpList($1, NULL)); }
+              | seq_list END			{ $$ = A_SeqExp(EM_tokPos, $1); }
+
+dec_list:	/* empty */		{ $$ = A_DecList(NULL, NULL); }
+        |	func_dec dec_list	{
+						// 1) A_decList A_DecList(A_dec head, A_decList tail);
+						//    has many A_dec, which are of types: A_FunctionDec, A_TypeDec or A_VarDec
+						// 2)   A_dec A_FunctionDec(A_pos pos, A_fundecList function);
+						//      is a
+						// 3)   A_fundecList A_FundecList(A_fundec head, A_fundecList tail);
+						//      has many
+						// 4)     A_fundec A_Fundec(A_pos pos, S_symbol name, A_fieldList params, S_symbol result, A_exp body);
+						if ($2 == NULL) {
+							$$ = A_DecList(A_FunctionDec(EM_tokPos, A_FundecList($1, NULL)), $2);
+						} else {
+							/* If the subsequent list's head is a function dec, create a 
+							   new function dec list with the head extracted from this
+							   subsequent list as tail. */
+							if ($2->head != NULL && $2->head->kind == A_functionDec) {
+								$$ = A_DecList(A_FunctionDec(EM_tokPos, A_FundecList($1, $2->head->u.function)), $2->tail);
+							} else {
+								$$ = A_DecList(A_FunctionDec(EM_tokPos, A_FundecList($1, NULL)), $2);
+							}
+						}
+					}
+   	|	type_dec dec_list	{
+						if ($2 == NULL) {
+							$$ = A_DecList(A_TypeDec(EM_tokPos, A_NametyList($1, NULL)), $2);
+						} else {
+							/* If the subsequent list's head is a type dec, create a 
+							   new type dec list with the head extracted from this
+							   subsequent list as tail. */
+							if ($2->head != NULL && $2->head->kind == A_typeDec) {
+								$$ = A_DecList(A_TypeDec(EM_tokPos, A_NametyList($1, $2->head->u.type)), $2->tail);
+							} else {
+								$$ = A_DecList(A_TypeDec(EM_tokPos, A_NametyList($1, NULL)), $2);
+							}
+						}
+					}
+  	|	var_dec dec_list	{ $$ = A_DecList($1, $2); }
+
+
+func_dec:	FUNCTION ID LPAREN type_field_list RPAREN EQ exp 		{ $$ = A_Fundec(EM_tokPos, S_Symbol($2), $4, NULL, $7); }
+        |	FUNCTION ID LPAREN type_field_list RPAREN COLON ID EQ exp	{ $$ = A_Fundec(EM_tokPos, S_Symbol($2), $4, S_Symbol($7), $9); }
+
+type_field_list:	/* empty */		{ $$ = NULL; }	
+               |	sub_type_field_list	{ $$ = $1; }
+
+sub_type_field_list:	type_field				{ $$ = A_FieldList($1, NULL); }
+                   |	type_field COMMA sub_type_field_list	{ $$ = A_FieldList($1, $3); }
+
+type_field:	ID COLON ID	{ $$ = A_Field(EM_tokPos, S_Symbol($1), S_Symbol($3)); }
+
+type_dec:	TYPE ID EQ type	{ $$ = A_Namety(S_Symbol($2), $4); }
+
+type:	ID				{ $$ = A_NameTy(EM_tokPos, S_Symbol($1)); }
+    |	LBRACE type_field_list RBRACE	{ $$ = A_RecordTy(EM_tokPos, $2); }
+    |	ARRAY OF ID			{ $$ = A_ArrayTy(EM_tokPos, S_Symbol($3)); }
+
+var_dec:	VAR ID ASSIGN exp		{ $$ = A_VarDec(EM_tokPos, S_Symbol($2), NULL, $4); }
+       |	VAR ID COLON ID ASSIGN exp	{ $$ = A_VarDec(EM_tokPos, S_Symbol($2), S_Symbol($4), $6); }
+
