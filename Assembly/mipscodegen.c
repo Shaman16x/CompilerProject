@@ -251,9 +251,10 @@ static void munchStm(T_stm s) {
 				T_exp e2 = src;
 				munchExp(e2); 
 				emit(AS_Oper("ADD 'd0 <- 's0 + r0\n",
- 					L(i,NULL), L(munchExp(e2), NULL), NULL))
+ 					L(i,NULL), L(munchExp(e2), NULL), NULL));
 			}
 			else assert(0);
+			
 		}
 		case T_JUMP:{
 			//T_exp exp = u.JUMP.exp;
@@ -262,12 +263,15 @@ static void munchStm(T_stm s) {
 		case T_CJUMP:{
 			break;	
 		}
-		case T_NAME:{
-			break;	
-		}
+	
 		case T_EXP:{
 			T_exp e0 = s->u.EXP;
-			if(e0->kind == T_BINOP){
+			if(e0->kind == T_BINOP
+			&& e0->u.EXP->u.BINOP.op == T_plus
+			&& e0->u.EXP->u.BINOP.right == T_CONST){
+				T_exp e1 = e0->u.EXP->u.BINOP.left;
+				T_exp e2 = e0->u.EXP->u.BINOP.right;
+				munchExp(e1); munchExp(e2);
 				
 			}
 		}
