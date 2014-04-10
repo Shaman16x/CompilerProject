@@ -223,35 +223,33 @@ static void munchStm(T_stm s) {
 				&& dst->u.MEM->u.BINOP.op == T_plus
 				&& dst->u.MEM->u.BINOP.right->kind == T_CONST){
 					T_exp e1 = dst->u.MEM->u.BINOP.left, e2 = src;
-					munchExp(e1); munchExp(e2); 
-					emit(AS_Oper("STORE M['s0+" + i + "] <- 's1\n",
- 					NULL, L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
+                    string temp = malloc(100);
+                    sprintf(temp, "STORE M['s0+%d] <- 's1\n", e2->u.CONST);
+					emit(AS_Oper(temp, NULL, L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
 				}
 				else if (dst->u.MEM->kind == T_BINOP
 				      && dst->u.MEM->u.BINOP.op == T_plus
 				      && dst->u.MEM->u.BINOP.left->kind  == T_CONST) {
-				      	munchExp(e1); munchExp(e2); 
-				      	emit(AS_Oper("STORE M['s0+" + i + "] <- 's1\n",
- 					NULL, L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
+                        string temp = malloc(100);
+                        sprintf(temp, "STORE M['s0+%d] <- 's1\n", e1->u.CONST);
+				      	emit(AS_Oper(temp, NULL, L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
 				      }
 				else if (src->kind == T_MEM){
 					T_exp e1 = dst->u.MEM,	e2 = src->u.MEM;
-					munchExp(e1); munchExp(e2); 
 					emit(AS_Oper("MOVE M['s0] <- M['s1]\n",
- 					NULL, L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
+                            NULL, L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
  
 				}
 				else{
 					T_exp e1 = dst->u.MEM, e2 = src;
-					munchExp(e1); munchExp(e2); 
 					emit(AS_Oper("STORE M['s0] <- 's1\n",
- 					NULL, L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
+                        NULL, L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
 				}
 			else if(dst->kind == T_TEMP){
 				T_exp e2 = src;
 				munchExp(e2); 
 				emit(AS_Oper("ADD 'd0 <- 's0 + r0\n",
- 					L(i,NULL), L(munchExp(e2), NULL), NULL));
+                        L(e2->u.TEMP,NULL), L(munchExp(e2), NULL), NULL));
 			}
 			else assert(0);
 			
@@ -268,7 +266,7 @@ static void munchStm(T_stm s) {
 			T_exp e0 = s->u.EXP;
 			if(e0->kind == T_BINOP
 			&& e0->u.BINOP.op == T_plus
-			&& e0->u.BINOP.right == T_CONST){
+			&& e0->u.BINOP.right->kind == T_CONST){
 				T_exp e1 = e0->u.BINOP.left;
 				T_exp e2 = e0->u.BINOP.right;
 				munchExp(e1); munchExp(e2);
