@@ -22,7 +22,7 @@ static Temp_temp munchExp(T_exp expr);
 static void munchStm(T_stm stm);
 
 Temp_tempList L(Temp_temp h, Temp_tempList t) {
-	return Temp_tempList(h,t);
+	return Temp_TempList(h,t);
 }
 
 static AS_instrList instrList = NULL, last = NULL;
@@ -125,9 +125,9 @@ static Temp_temp munchExp(T_exp e){
             }
         }
         case T_BINOP:{  // TODO create binary short cuts for const args
-            Temp_temp r = newtemp();
+            Temp_temp r = Temp_newtemp();
             T_exp e1 = e->u.BINOP.left, e2 = e->u.BINOP.right; 
-            switch(e->u.op){
+            switch(e->u.BINOP.op){
                 case T_plus:{
                     emit(AS_Oper("add 'd0 <- 's0+'s1\n",
                             L(r, NULL), L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
@@ -184,13 +184,21 @@ static Temp_temp munchExp(T_exp e){
             return e->u.TEMP;
         }
         case T_ESEQ:
-        case T_NAME:
-        case T_CONST:
+        case T_NAME:{
+            emit(AS_Label("'l0", e->u.NAME));    // TODO: determine if this is correct handling
+        }
+        case T_CONST:{
+            Temp_temp r = Temp_newtemp();
+            string temp = malloc(100);
+            sprintf(temp, "li 'd0 <- M[r0+%d]\n", e->u.CONST);
+            emit(AS_Oper(temp, L(r, NULL), NULL, NULL));
+            return r;
+        }
         case T_CALL:{
             /* CALL(e, args) */
             Temp_temp r = munchExp(e);
-            Temp_TempList l = NULL; //TODO create a munch args function call, see pg 212
-            emit(AS_Oper("jal 's0\n", NULL, L(r, l) NULL));  //TODO calldefs, pg 212
+            Temp_tempList l = NULL; //TODO create a munch args function call, see pg 212
+            emit(AS_Oper("jal 's0\n", NULL, L(r, l), NULL));  //TODO calldefs, pg 212
         }
         default:
             printf("ERROR\n");
