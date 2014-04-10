@@ -272,7 +272,7 @@ static void munchStm(T_stm s) {
 				T_exp e1 = e0->u.EXP->u.BINOP.left;
 				T_exp e2 = e0->u.EXP->u.BINOP.right;
 				munchExp(e1); munchExp(e2);
-				emit(AS_Oper("add 'd0 <- 's0+'s1\n"))
+			//	emit(AS_Oper("add 'd0 <- 's0+'s1\n"))
 			}
 		}
 	}		
