@@ -109,7 +109,7 @@ static Temp_temp munchExp(T_exp e){
 }
 
 static void munchStm(T_stm s) {
-	switch (s->kind)
+	switch (s->kind){
 		case T_MOVE:{
 			T_exp dst = s->u.MOVE.dst, src = s->u.MOVE.src;
 			if(dst->kind == T_MEM)
@@ -148,6 +148,8 @@ static void munchStm(T_stm s) {
 		case T_NAME:{
 			break;	
 		}
-	
-		
+		case T_EXP:{
+			break;
+		}
+	}		
 }
