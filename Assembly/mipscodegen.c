@@ -112,79 +112,86 @@ static Temp_temp munchExp(T_exp e){
                 /* MEM(CONST(i) */
                 Temp_temp r = Temp_newtemp();
                 char *temp = malloc(100);
-                sprintf(temp, "LOAD 'd0 <- M[r0+%d]\n", mem->u.CONST);
+                sprintf(temp, "lw 'd0 <- M[r0+%d]\n", mem->u.CONST);
                 emit(AS_Oper(temp, L(r, NULL), NULL, NULL));
                 return r;
             }
             else {
                 /* MEM(e1) */
                 Temp_temp r = Temp_newtemp();
-                emit(AS_Oper("LOAD 'd0 <- M['s0+0]\n",
+                emit(AS_Oper("lw 'd0 <- M['s0+0]\n",
                                 L(r, NULL), L(munchExp(mem), NULL), NULL));
                 return r;
             }
         }
-        case T_BINOP:{
+        case T_BINOP:{  // TODO create binary short cuts for const args
             Temp_temp r = newtemp();
-            T_exp e1 = e->u.left, e2 = e->u.right; 
+            T_exp e1 = e->u.BINOP.left, e2 = e->u.BINOP.right; 
             switch(e->u.op){
                 case T_plus:{
-                    emit(AS_Oper("ADD 'd0 <- 's0+'s1\n",
+                    emit(AS_Oper("add 'd0 <- 's0+'s1\n",
                             L(r, NULL), L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
                     return r;
                 }
                 case T_minus:{
-                    emit(AS_Oper("SUB 'd0 <- 's0+'s1\n",
+                    emit(AS_Oper("sub 'd0 <- 's0+'s1\n",
                             L(r, NULL), L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
                     return r;
                 }
                 case T_mul:{
-                    emit(AS_Oper("ADD 'd0 <- 's0+'s1\n",
+                    emit(AS_Oper("mul 'd0 <- 's0+'s1\n",
                             L(r, NULL), L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
                     return r;
                 }
                 case T_div:{
-                    emit(AS_Oper("ADD 'd0 <- 's0+'s1\n",
+                    emit(AS_Oper("div 'd0 <- 's0+'s1\n",
                             L(r, NULL), L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
                     return r;
                 }
                 case T_and:{
-                    emit(AS_Oper("ADD 'd0 <- 's0+'s1\n",
+                    emit(AS_Oper("and 'd0 <- 's0+'s1\n",
                             L(r, NULL), L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
                     return r;
                 }
                 case T_or:{
-                    emit(AS_Oper("ADD 'd0 <- 's0+'s1\n",
+                    emit(AS_Oper("or 'd0 <- 's0+'s1\n",
                             L(r, NULL), L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
                     return r;
                 }
                 case T_lshift:{
-                    emit(AS_Oper("ADD 'd0 <- 's0+'s1\n",
+                    emit(AS_Oper("sll 'd0 <- 's0+'s1\n",
                             L(r, NULL), L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
                     return r;
                 }
                 case T_rshift:{
-                    emit(AS_Oper("ADD 'd0 <- 's0+'s1\n",
+                    emit(AS_Oper("srl 'd0 <- 's0+'s1\n",
                             L(r, NULL), L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
                     return r;
                 }
                 case T_arshift:{
-                    emit(AS_Oper("ADD 'd0 <- 's0+'s1\n",
+                    emit(AS_Oper("sra 'd0 <- 's0+'s1\n",
                             L(r, NULL), L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
                     return r;
                 }
                 case T_xor:{
-                    emit(AS_Oper("ADD 'd0 <- 's0+'s1\n",
+                    emit(AS_Oper("xor 'd0 <- 's0+'s1\n",
                             L(r, NULL), L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
                     return r;
                 }
             }
         }
-        case T_TEMP:
+        case T_TEMP:{
+            return e->u.TEMP;
+        }
         case T_ESEQ:
         case T_NAME:
         case T_CONST:
-        case T_CALL:
+        case T_CALL:{
+            /* CALL(e, args) */
+            Temp_temp r = munchExp(e);
+            Temp_TempList l = NULL; //TODO create a munch args function call, see pg 212
+            emit(AS_Oper("jal 's0\n", NULL, L(r, l) NULL));  //TODO calldefs, pg 212
+        }
         default:
             printf("ERROR\n");
 	}
