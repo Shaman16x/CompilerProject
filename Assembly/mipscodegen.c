@@ -139,13 +139,14 @@ static void munchStm(T_stm s) {
 			else assert(0);
 		}
 		case T_JUMP:{
-			
+			//T_exp exp = u.JUMP.exp;
+			break;
 		}
 		case T_CJUMP:{
-			
+			break;	
 		}
 		case T_NAME:{
-			
+			break;	
 		}
 	
 		
