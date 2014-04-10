@@ -21,6 +21,10 @@ static void emit(AS_instr instr);
 static Temp_temp munchExp(T_exp expr);
 static void munchStm(T_stm stm);
 
+Temp_tempList L(Temp_temp h, Temp_tempListt) {
+	return Temp_tempList(h,t);
+}
+
 static AS_instrList instrList = NULL, last = NULL;
 
 static void emit(AS_instr instr)
@@ -104,32 +108,45 @@ static Temp_temp munchExp(T_exp e){
 	}
 }
 
-static void Temp_temp munchStm(T_stm s) {
-	switch (s)
-		case MOVE(MEM(BINOP(PLUS, e1, CONST(i))), e2):
-			emit(AS_Oper("STORE M['s0+" + i + "] <- 's1\n",
-					NULL, L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
-
-		case MOVE(MEM(BINOP(PLUS, CONST(i), e1,)), e2):
-			emit(AS_Oper("STORE M['s0+" + i + "] <- 's1\n",
-					NULL, L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
-
-		case MOVE(MEM(e1), MEM(e2)):
-			emit(AS_Oper("MOVE M['s0] <- M['s1]\n",
-					NULL, L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
-
-		case MOVE(MEM(CONST(i)), e2):
-			emit(AS_Oper("STORE M[r0+" + i + "] <- 's0\n",
-					NULL, L(munchExp(e2), NULL), NULL));
-
-		case MOVE(MEM(e1), e2):
-			emit(AS_Oper("STORE M['s0] <- 's1\n",
-					NULL, L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
-
-		case MOVE(TEMP(i), e2):
-			emit(AS_Oper("ADD 'd0 <- 's0 + r0\n",
-					L(i,NULL), L(munchExp(e2), NULL), NULL));			
-
-		case LABEL(lab):
-			emit(AS_Label(Temp_labelstring(lab) + ":\n", lab));
+static void munchStm(T_stm s) {
+	switch (s->kind)
+		case T_MOVE:{
+			T_exp dst = s->u.MOVE.dst, src = s->u.MOVE.src;
+			if(dst->kind == T_MEM)
+				if(dst->u.MEM->kind == T_BINOP
+				&& dst->u.MEM->u.BINOP.op == T_plus
+				&& dst->u.MEM->u.BINOP.right->kind == T_CONST){
+					T_exp e1 = dst->u.MEM->u.BINOP.left, e2 = src;
+					munchExp(e1); munchExp(e2); emit("STORE");
+				}
+				else if (dst->u.MEM->kind == T_BINOP
+				      && dst->u.MEM->u.BINOP.op == T_plus
+				      && dst->u.MEM->u.BINOP.left->kind  == T_CONST) {
+				      	munchExp(e1); munchExp(e2); emit("STORE");
+				      }
+				else if (src->kind == T_MEM){
+					T_exp e1 = dst->u.MEM,	e2 = src->u.MEM;
+					munchExp(e1); munchExp(e2); emit("MOVEM");
+				}
+				else{
+					T_exp e1 = dst->u.MEM, e2 = src;
+					munchExp(e1); munchExp(e2); emit("STORE");
+				}
+			else if(dst->kind == T_TEMP){
+				T_exp e2 = src;
+				munchExp(e2); emit("ADD");
+			}
+			else assert(0);
+		}
+		case T_JUMP:{
+			
+		}
+		case T_CUMP:{
+			
+		}
+		case T_NAME:{
+			
+		}
+	
+		
 }
