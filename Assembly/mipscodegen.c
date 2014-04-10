@@ -269,8 +269,8 @@ static void munchStm(T_stm s) {
 			if(e0->kind == T_BINOP
 			&& e0->u.BINOP.op == T_plus
 			&& e0->u.BINOP.right == T_CONST){
-				T_exp e1 = e0->u.EXP->u.BINOP.left;
-				T_exp e2 = e0->u.EXP->u.BINOP.right;
+				T_exp e1 = e0->u.BINOP.left;
+				T_exp e2 = e0->u.BINOP.right;
 				munchExp(e1); munchExp(e2);
 			//	emit(AS_Oper("add 'd0 <- 's0+'s1\n"))
 			}
