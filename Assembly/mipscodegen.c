@@ -20,6 +20,7 @@
 static void emit(AS_instr instr);
 static Temp_temp munchExp(T_exp expr);
 static void munchStm(T_stm stm);
+T_exp e1, e2;
 
 Temp_tempList L(Temp_temp h, Temp_tempList t) {
 	return Temp_tempList(h,t);
@@ -117,24 +118,35 @@ static void munchStm(T_stm s) {
 				&& dst->u.MEM->u.BINOP.op == T_plus
 				&& dst->u.MEM->u.BINOP.right->kind == T_CONST){
 					T_exp e1 = dst->u.MEM->u.BINOP.left, e2 = src;
-					munchExp(e1); munchExp(e2); emit("STORE");
+					munchExp(e1); munchExp(e2); 
+					emit(AS_Oper("STORE M['s0+" + i + "] <- 's1\n",
+ +					NULL, L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
 				}
 				else if (dst->u.MEM->kind == T_BINOP
 				      && dst->u.MEM->u.BINOP.op == T_plus
 				      && dst->u.MEM->u.BINOP.left->kind  == T_CONST) {
-				      	munchExp(e1); munchExp(e2); emit("STORE");
+				      	munchExp(e1); munchExp(e2); 
+				      	emit(AS_Oper("STORE M['s0+" + i + "] <- 's1\n",
+ +					NULL, L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
 				      }
 				else if (src->kind == T_MEM){
 					T_exp e1 = dst->u.MEM,	e2 = src->u.MEM;
-					munchExp(e1); munchExp(e2); emit("MOVEM");
+					munchExp(e1); munchExp(e2); 
+					emit(AS_Oper("MOVE M['s0] <- M['s1]\n",
+ +					NULL, L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
+ 
 				}
 				else{
 					T_exp e1 = dst->u.MEM, e2 = src;
-					munchExp(e1); munchExp(e2); emit("STORE");
+					munchExp(e1); munchExp(e2); 
+					emit(AS_Oper("STORE M['s0] <- 's1\n",
+ +					NULL, L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
 				}
 			else if(dst->kind == T_TEMP){
 				T_exp e2 = src;
-				munchExp(e2); emit("ADD");
+				munchExp(e2); 
+				emit(AS_Oper("ADD 'd0 <- 's0 + r0\n",
+ +					L(i,NULL), L(munchExp(e2), NULL), NULL))
 			}
 			else assert(0);
 		}
