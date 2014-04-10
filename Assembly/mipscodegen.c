@@ -184,9 +184,16 @@ static Temp_temp munchExp(T_exp e){
         case T_TEMP:{
             return e->u.TEMP;
         }
-        case T_ESEQ:
+        case T_ESEQ:{
+            Temp_temp r = Temp_newtemp();
+            munchStm(e->u.ESEQ.stm);
+            r = munchExp(e->u.ESEQ.exp);
+            return r;
+        }
         case T_NAME:{
+            Temp_temp r = Temp_newtemp();
             emit(AS_Label("'l0", e->u.NAME));    // TODO: determine if this is correct handling
+            return r;
         }
         case T_CONST:{
             Temp_temp r = Temp_newtemp();
