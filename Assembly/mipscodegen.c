@@ -247,7 +247,7 @@ static void munchStm(T_stm s) {
 				}
 			else if(dst->kind == T_TEMP){
 				T_exp e2 = src;
-				munchExp(e2); 
+				munchExp(e2);
 				emit(AS_Oper("ADD 'd0 <- 's0 + r0\n",
                         L(e2->u.TEMP,NULL), L(munchExp(e2), NULL), NULL));
 			}
@@ -269,8 +269,8 @@ static void munchStm(T_stm s) {
 			&& e0->u.BINOP.right->kind == T_CONST){
 				T_exp e1 = e0->u.BINOP.left;
 				T_exp e2 = e0->u.BINOP.right;
-				munchExp(e1); munchExp(e2);
-			//	emit(AS_Oper("add 'd0 <- 's0+'s1\n"))
+			//	emit(AS_Oper("add 'd0 <- 's0+'s1\n",
+			//	L(r, NULL), L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
 			}
 		}
 	}		
