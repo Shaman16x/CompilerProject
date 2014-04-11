@@ -236,26 +236,32 @@ static void munchStm(T_stm s) {
 				      }
 				else if (src->kind == T_MEM){
 					T_exp e1 = dst->u.MEM,	e2 = src->u.MEM;
-					emit(AS_Oper("MOVE M['s0] <- M['s1]\n",
-                            NULL, L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
+					string temp = malloc(100);
+                        sprintf(temp, "MOVE M['s0] <- M['s1]\n");
+					emit(AS_Oper(temp, NULL, L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
  
 				}
 				else{
 					T_exp e1 = dst->u.MEM, e2 = src;
-					emit(AS_Oper("STORE M['s0] <- 's1\n",
-                        NULL, L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
+					string temp = malloc(100);
+					sprintf(temp, "STORE M['s0] <- 's1\n");
+					emit(AS_Oper(temp, NULL, L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
 				}
 			else if(dst->kind == T_TEMP){
 				T_exp e2 = src;
 				munchExp(e2);
-				emit(AS_Oper("ADD 'd0 <- 's0 + r0\n",
-                        L(e2->u.TEMP,NULL), L(munchExp(e2), NULL), NULL));
+				string temp = malloc(100);
+				sprintf(temp, "ADD 'd0 <- 's0 + r0\n");
+				emit(AS_Oper(temp, L(e2->u.TEMP,NULL), L(munchExp(e2), NULL), NULL));
 			}
 			else assert(0);
 			
 		}
 		case T_LABEL:{
 			Temp_label lab = s->u.LABEL;
+			string temp = malloc(100);
+                    sprintf(temp, "b: %s\n", lab);
+			emit(AS_Label(temp))
 			break;
 		}
 		case T_SEQ:{
