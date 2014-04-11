@@ -310,8 +310,9 @@ static void munchStm(T_stm s) {
 			&& e0->u.BINOP.right->kind == T_CONST){
 				T_exp e1 = e0->u.BINOP.left;
 				T_exp e2 = e0->u.BINOP.right;
-			//	emit(AS_Oper("add 'd0 <- 's0+'s1\n",
-			//	L(r, NULL), L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
+				string temp = malloc(100);
+				sprintf(temp, "add 'd0 <- 's0+'s1\n");
+				emit(AS_Oper(temp, L(r, NULL), L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
 			break;
 			}
 		}
