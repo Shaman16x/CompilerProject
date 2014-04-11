@@ -255,12 +255,14 @@ static void munchStm(T_stm s) {
 			
 		}
 		case T_LABEL:{
+			Temp_label lab = s->u.LABEL;
 			break;
 		}
 		case T_SEQ:{
 			T_stm left = s->u.SEQ.left, right = s->u.SEQ.right;
 			munchStm(left);
 			munchStm(right);
+			break;
 		}
 		case T_JUMP:{
 			//T_exp exp = u.JUMP.exp;
@@ -279,6 +281,7 @@ static void munchStm(T_stm s) {
 				T_exp e2 = e0->u.BINOP.right;
 			//	emit(AS_Oper("add 'd0 <- 's0+'s1\n",
 			//	L(r, NULL), L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
+			break;
 			}
 		}
 	}		
