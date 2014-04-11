@@ -193,7 +193,7 @@ static Temp_temp munchExp(T_exp e){
                     }
                 }
                 default:
-                    printf("ERROR: undefined binop");
+                    assert(0);
             }
         }
         case T_TEMP:{
@@ -227,11 +227,12 @@ static Temp_temp munchExp(T_exp e){
             Temp_tempList l = NULL; //TODO create a munch args function call, see pg 212
             printf("CALL EXP\n"); // DEBUG
             emit(AS_Oper("jal 's0\n", NULL, L(r, l), NULL));  //TODO calldefs, pg 212
+            return r; //TODO correct return?
         }
         default:
             printf("ERROR\n");
 	}
-    return NULL;
+    assert(0);
 }
 
 static void munchStm(T_stm s) {
@@ -239,7 +240,7 @@ static void munchStm(T_stm s) {
 		case T_MOVE:{
 			T_exp dst = s->u.MOVE.dst, src = s->u.MOVE.src;
             printf("MOVE STMT\n"); // DEBUG
-			if(dst->kind == T_MEM)
+			if(dst->kind == T_MEM){
 				if(dst->u.MEM->kind == T_BINOP
 				&& dst->u.MEM->u.BINOP.op == T_plus
 				&& dst->u.MEM->u.BINOP.right->kind == T_CONST){
@@ -267,14 +268,17 @@ static void munchStm(T_stm s) {
 					sprintf(temp, "STORE M['s0] <- 's1\n");
 					emit(AS_Oper(temp, NULL, L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
 				}
+            }
 			else if(dst->kind == T_TEMP){
 				T_exp e2 = src;
-				munchExp(e2);
 				string temp = malloc(100);
 				sprintf(temp, "ADD 'd0 <- 's0 + r0\n");
+                //printf("HERE\n"); //DEBUG
 				emit(AS_Oper(temp, L(e2->u.TEMP,NULL), L(munchExp(e2), NULL), NULL));
+                //printf("THERE\n");
 			}
 			else assert(0);
+            printf("X MOVE STMT\n"); //DEBUG
 			break;
 		}
 		case T_LABEL:{
