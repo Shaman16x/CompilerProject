@@ -260,7 +260,6 @@ static void munchStm(T_stm s) {
 					string temp = malloc(100);
                         sprintf(temp, "MOVE M['s0] <- M['s1]\n");
 					emit(AS_Oper(temp, NULL, L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
- 
 				}
 				else{
 					T_exp e1 = dst->u.MEM, e2 = src;
@@ -276,14 +275,14 @@ static void munchStm(T_stm s) {
 				emit(AS_Oper(temp, L(e2->u.TEMP,NULL), L(munchExp(e2), NULL), NULL));
 			}
 			else assert(0);
-			
+			break;
 		}
 		case T_LABEL:{
 			Temp_label lab = s->u.LABEL;
             printf("LABEL STMT\n"); // DEBUG
 			string temp = malloc(100);
-                    sprintf(temp, "b: %s\n", lab);
-			emit(AS_Label(temp))
+            sprintf(temp, "b: %s\n", Temp_labelstring(lab));
+			emit(AS_Label(temp, lab));
 			break;
 		}
 		case T_SEQ:{
