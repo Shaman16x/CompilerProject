@@ -64,6 +64,7 @@ static Temp_temp munchExp(T_exp e){
         */
         case T_MEM:{
             T_exp mem = e->u.MEM;
+            printf("MEM EXP\n"); // DEBUG
             if(mem->kind == T_CONST){ // add some maximal checks
                 /* MEM(CONST(i) */
                 Temp_temp r = Temp_newtemp();
@@ -83,6 +84,7 @@ static Temp_temp munchExp(T_exp e){
         case T_BINOP:{  // TODO create binary short cuts for const args
             Temp_temp r = Temp_newtemp();
             T_exp e1 = e->u.BINOP.left, e2 = e->u.BINOP.right; 
+            printf("BINOP EXP\n"); // DEBUG
             switch(e->u.BINOP.op){
                 case T_plus:{
                     if(e1->kind == T_CONST){
@@ -190,24 +192,30 @@ static Temp_temp munchExp(T_exp e){
                         return r;
                     }
                 }
+                default:
+                    printf("ERROR: undefined binop");
             }
         }
         case T_TEMP:{
+            printf("TEMP EXP\n"); // DEBUG
             return e->u.TEMP;
         }
         case T_ESEQ:{
             Temp_temp r = Temp_newtemp();
+            printf("ESEQ EXP\n"); // DEBUG
             munchStm(e->u.ESEQ.stm);
             r = munchExp(e->u.ESEQ.exp);
             return r;
         }
         case T_NAME:{
             Temp_temp r = Temp_newtemp();
+            printf("NAME EXP\n"); // DEBUG
             emit(AS_Label("'l0", e->u.NAME));    // TODO: determine if this is correct handling
             return r;
         }
         case T_CONST:{
             Temp_temp r = Temp_newtemp();
+            printf("CONST EXP\n"); // DEBUG
             string temp = malloc(100);
             sprintf(temp, "li 'd0 <- M[r0+%d]\n", e->u.CONST);
             emit(AS_Oper(temp, L(r, NULL), NULL, NULL));
@@ -217,6 +225,7 @@ static Temp_temp munchExp(T_exp e){
             /* CALL(e, args) */
             Temp_temp r = munchExp(e);
             Temp_tempList l = NULL; //TODO create a munch args function call, see pg 212
+            printf("CALL EXP\n"); // DEBUG
             emit(AS_Oper("jal 's0\n", NULL, L(r, l), NULL));  //TODO calldefs, pg 212
         }
         default:
@@ -229,6 +238,7 @@ static void munchStm(T_stm s) {
 	switch (s->kind){
 		case T_MOVE:{
 			T_exp dst = s->u.MOVE.dst, src = s->u.MOVE.src;
+            printf("MOVE STMT\n"); // DEBUG
 			if(dst->kind == T_MEM)
 				if(dst->u.MEM->kind == T_BINOP
 				&& dst->u.MEM->u.BINOP.op == T_plus
@@ -267,24 +277,29 @@ static void munchStm(T_stm s) {
 		}
 		case T_LABEL:{
 			Temp_label lab = s->u.LABEL;
+            printf("LABEL STMT\n"); // DEBUG
 			break;
 		}
 		case T_SEQ:{
 			T_stm left = s->u.SEQ.left, right = s->u.SEQ.right;
+            printf("SEQ STMT\n"); // DEBUG
 			munchStm(left);
 			munchStm(right);
 			break;
 		}
 		case T_JUMP:{
 			//T_exp exp = u.JUMP.exp;
+            printf("JUMP STMT\n"); // DEBUG
 			break;
 		}
 		case T_CJUMP:{
+            printf("CJUMP STMT\n"); // DEBUG
 			break;	
 		}
 	
 		case T_EXP:{
 			T_exp e0 = s->u.EXP;
+            printf("EXP STMT\n"); // DEBUG
 			if(e0->kind == T_BINOP
 			&& e0->u.BINOP.op == T_plus
 			&& e0->u.BINOP.right->kind == T_CONST){

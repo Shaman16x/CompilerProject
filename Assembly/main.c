@@ -62,13 +62,13 @@ static void doProc(FILE *out, F_frame frame, T_stm body)
 
 	printStmList(out, stmList);
 
-/* Assignment 6
+/* Assignment 6 */
 	iList = F_codegen(frame, stmList);
-	Temp_map map = NULL;//TODO Create a temp map here
-	fprintf(out, "BEGIN %s\n", Temp_labelstring(F_name(frame)));
-	AS_printInstrList (out, iList, map);
-	fprintf(out, "END %s\n", Temp_labelstring(F_name(frame)));
-*/
+	//Temp_map map = NULL;//TODO Create a temp map here
+	//fprintf(out, "BEGIN %s\n", Temp_labelstring(F_name(frame)));
+	//AS_printInstrList (out, iList, map);
+	//fprintf(out, "END %s\n", Temp_labelstring(F_name(frame)));
+
 }
 
 int main(int argc, string *argv)
@@ -76,6 +76,7 @@ int main(int argc, string *argv)
 	A_exp absyn_root = NULL;
 //	S_table base_env, base_tenv;
 	F_fragList frags = NULL;
+    AS_instrList insts = NULL;
 	char outfile[100];	
 	FILE *out = stdout;
 
@@ -93,26 +94,27 @@ int main(int argc, string *argv)
 //   Esc_findEscape(absyn_root); /* set varDec's escape field */	//NOT AVAILABLE
 
 	frags = SEM_transProg(absyn_root);
+    
 	if (anyErrors) {
 		// don't continue
 		return 1; 
 	}
 
    sprintf(outfile, "%s.s", argv[1]);
-   out = fopen(outfile, "w");
-		for (;frags;frags=frags->tail) {
-			if (frags->head != NULL) {
-				if (frags->head->kind == F_procFrag) {
-					doProc(out, frags->head->u.proc.frame, frags->head->u.proc.body);
-			 	} 
-				else if (frags->head->kind == F_stringFrag) {
-					fprintf(out, "%s\n", frags->head->u.stringg.str);
-				}
-			}
-		}
+    out = fopen(outfile, "w");
+    for (;frags;frags=frags->tail) {
+        if (frags->head != NULL) {
+            if (frags->head->kind == F_procFrag) {
+                doProc(out, frags->head->u.proc.frame, frags->head->u.proc.body);
+            } 
+            else if (frags->head->kind == F_stringFrag) {
+                fprintf(out, "%s\n", frags->head->u.stringg.str);
+            }
+        }
+    }
 
-   		fclose(out);
-		return 0;
+    fclose(out);
+    return 0;
 	}
 
 	EM_error(0, "usage: tiger file.tig");
