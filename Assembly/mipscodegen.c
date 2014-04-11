@@ -254,6 +254,12 @@ static void munchStm(T_stm s) {
 			else assert(0);
 			
 		}
+		case T_LABEL:{
+			break;
+		}
+		case T_SEQ:{
+			break;
+		}
 		case T_JUMP:{
 			//T_exp exp = u.JUMP.exp;
 			break;
