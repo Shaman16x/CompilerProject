@@ -85,7 +85,14 @@ static Temp_temp munchExp(T_exp e){
             Temp_temp r = Temp_newtemp();
             T_exp e1 = e->u.BINOP.left, e2 = e->u.BINOP.right; 
             printf("BINOP EXP\n"); // DEBUG
-            switch(e->u.BINOP.op){
+            
+            /*  none of these BINOPs are listed in tree.c, so i don't
+             * think you need them.  i think you just need the general BINOP
+             * situation. could be why you were getting
+             * the seg faults.  
+             */
+            
+            /*switch(e->u.BINOP.op){
                 case T_plus:{
                     if(e1->kind == T_CONST){
                         char *temp = malloc(100);
@@ -194,7 +201,7 @@ static Temp_temp munchExp(T_exp e){
                 }
                 default:
                     assert(0);
-            }
+            }*/
         }
         case T_TEMP:{
             printf("TEMP EXP\n"); // DEBUG
@@ -314,36 +321,36 @@ static void munchStm(T_stm s) {
 			string temp = malloc(100);
 			
 			switch(s->u.CJUMP.op){
-			    case T_eq:
-			        sprintf(temp, "beq: \n");
-				    break;
-			    case T_ne:
-			        sprintf(temp, "bne: \n");
-			        break;
-			    case T_lt:
-			        sprintf(temp, "blt: \n");
-				    break;
-			    case T_le:
-			        sprintf(temp, "ble: \n");
-			        break;
-			    case T_gt:
-			        sprintf(temp, "bgt: \n");
-			        break;
-			    case T_ge:
-			        sprintf(temp, "bge: \n");
-			        break;
-			    case T_ult:
-			        sprintf(temp, "blt: \n");
-			        break;
-			    case T_ule:
-			        sprintf(temp, "ble: \n");
-			        break;
-			    case T_ugt:
-			        sprintf(temp, "bgt: \n");
-			        break;
-			    case T_uge:
-			        sprintf(temp, "bge: \n");
-			        break;
+				case T_eq:
+					sprintf(temp, "beq: \n");
+					break;
+				case T_ne:
+					sprintf(temp, "bne: \n");
+					break;
+				case T_lt:
+					sprintf(temp, "blt: \n");
+					break;
+				case T_le:
+					sprintf(temp, "ble: \n");
+					break;
+				case T_gt:
+					sprintf(temp, "bgt: \n");
+					break;
+				case T_ge:
+					sprintf(temp, "bge: \n");
+					break;
+				case T_ult:
+					sprintf(temp, "blt: \n");
+					break;
+				case T_ule:
+					sprintf(temp, "ble: \n");
+					break;
+				case T_ugt:
+					sprintf(temp, "bgt: \n");
+					break;
+				case T_uge:
+					sprintf(temp, "bge: \n");
+					break;
 			}
 			emit(AS_Oper(temp, NULL, L(munchExp(left), L(munchExp(right), NULL)), NULL));
 			
