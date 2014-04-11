@@ -258,7 +258,9 @@ static void munchStm(T_stm s) {
 			break;
 		}
 		case T_SEQ:{
-			break;
+			T_stm left = s->u.SEQ.left, right = s->u.SEQ.right;
+			munchStm(left);
+			munchStm(right);
 		}
 		case T_JUMP:{
 			//T_exp exp = u.JUMP.exp;
