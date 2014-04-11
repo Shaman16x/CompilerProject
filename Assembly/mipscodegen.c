@@ -310,6 +310,14 @@ static void munchStm(T_stm s) {
 			else assert(0);
 			
 		}
+		case T_LABEL:{
+			break;
+		}
+		case T_SEQ:{
+			T_stm left = s->u.SEQ.left, right = s->u.SEQ.right;
+			munchStm(left);
+			munchStm(right);
+		}
 		case T_JUMP:{
 			//T_exp exp = u.JUMP.exp;
 			break;
