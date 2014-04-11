@@ -130,9 +130,23 @@ static Temp_temp munchExp(T_exp e){
             T_exp e1 = e->u.BINOP.left, e2 = e->u.BINOP.right; 
             switch(e->u.BINOP.op){
                 case T_plus:{
-                    emit(AS_Oper("add 'd0 <- 's0+'s1\n",
+                    if(e1->kind == T_CONST){
+                        char *temp = malloc(100);
+                        sprintf(temp, "addi 'd0 <- 's0+%d\n", e1->u.CONST);
+                        emit(AS_Oper(temp, L(r, NULL), L(munchExp(e2), NULL), NULL));
+                        return r;
+                    }
+                    else if (e2->kind == T_CONST){
+                        char *temp = malloc(100);
+                        sprintf(temp, "addi 'd0 <- 's0+%d\n", e2->u.CONST);
+                        emit(AS_Oper(temp, L(r, NULL), L(munchExp(e1), NULL), NULL));
+                        return r;
+                    }
+                    else{
+                        emit(AS_Oper("add 'd0 <- 's0+'s1\n",
                             L(r, NULL), L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
-                    return r;
+                        return r;
+                    }
                 }
                 case T_minus:{
                     emit(AS_Oper("sub 'd0 <- 's0+'s1\n",
@@ -150,14 +164,42 @@ static Temp_temp munchExp(T_exp e){
                     return r;
                 }
                 case T_and:{
-                    emit(AS_Oper("and 'd0 <- 's0+'s1\n",
-                            L(r, NULL), L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
-                    return r;
+                    if(e1->kind == T_CONST){
+                        char *temp = malloc(100);
+                        sprintf(temp, "andi 'd0 <- 's0+%d\n", e1->u.CONST);
+                        emit(AS_Oper(temp, L(r, NULL), L(munchExp(e2), NULL), NULL));
+                        return r;
+                    }
+                    else if (e2->kind == T_CONST){
+                        char *temp = malloc(100);
+                        sprintf(temp, "andi 'd0 <- 's0+%d\n", e2->u.CONST);
+                        emit(AS_Oper(temp, L(r, NULL), L(munchExp(e1), NULL), NULL));
+                        return r;
+                    }
+                    else {
+                        emit(AS_Oper("and 'd0 <- 's0+'s1\n",
+                                L(r, NULL), L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
+                        return r;
+                    }
                 }
                 case T_or:{
-                    emit(AS_Oper("or 'd0 <- 's0+'s1\n",
-                            L(r, NULL), L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
-                    return r;
+                    if(e1->kind == T_CONST){
+                        char *temp = malloc(100);
+                        sprintf(temp, "ori 'd0 <- 's0+%d\n", e1->u.CONST);
+                        emit(AS_Oper(temp, L(r, NULL), L(munchExp(e2), NULL), NULL));
+                        return r;
+                    }
+                    else if (e2->kind == T_CONST){
+                        char *temp = malloc(100);
+                        sprintf(temp, "ori 'd0 <- 's0+%d\n", e2->u.CONST);
+                        emit(AS_Oper(temp, L(r, NULL), L(munchExp(e1), NULL), NULL));
+                        return r;
+                    }
+                    else {
+                        emit(AS_Oper("or 'd0 <- 's0+'s1\n",
+                                L(r, NULL), L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
+                        return r;
+                    }
                 }
                 case T_lshift:{
                     emit(AS_Oper("sll 'd0 <- 's0+'s1\n",
@@ -175,9 +217,23 @@ static Temp_temp munchExp(T_exp e){
                     return r;
                 }
                 case T_xor:{
-                    emit(AS_Oper("xor 'd0 <- 's0+'s1\n",
-                            L(r, NULL), L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
-                    return r;
+                    if(e1->kind == T_CONST){
+                        char *temp = malloc(100);
+                        sprintf(temp, "xori 'd0 <- 's0+%d\n", e1->u.CONST);
+                        emit(AS_Oper(temp, L(r, NULL), L(munchExp(e2), NULL), NULL));
+                        return r;
+                    }
+                    else if (e2->kind == T_CONST){
+                        char *temp = malloc(100);
+                        sprintf(temp, "xori 'd0 <- 's0+%d\n", e2->u.CONST);
+                        emit(AS_Oper(temp, L(r, NULL), L(munchExp(e1), NULL), NULL));
+                        return r;
+                    }
+                    else{
+                        emit(AS_Oper("xor 'd0 <- 's0+'s1\n",
+                                L(r, NULL), L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
+                        return r;
+                    }
                 }
             }
         }
