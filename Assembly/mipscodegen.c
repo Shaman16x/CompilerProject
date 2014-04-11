@@ -297,32 +297,63 @@ static void munchStm(T_stm s) {
 			break;
 		}
 		case T_JUMP:{
+			Temp_temp r = Temp_newtemp();
 			T_exp e = s->u.JUMP.exp;
 			Temp_labelList jumps = s->u.JUMP.jumps;
 			string temp = malloc(100);
-			sprintf(temp, "jal: %s\n", Temp_labelstring(jumps));
-		
+			sprintf(temp, "jal: \n");
+			emit(AS_Oper(temp, L(r, NULL), L(r, NULL), AS_Targets(jumps)));
             printf("JUMP STMT\n"); // DEBUG
 			break;
 		}
 		case T_CJUMP:{
             printf("CJUMP STMT\n"); // DEBUG
+            Temp_temp r = Temp_newtemp();
+			T_exp left = s->u.CJUMP.left;
+			T_exp right = s->u.CJUMP.right;
+			string temp = malloc(100);
+			
+			switch(s->u.CJUMP.op){
+			    case T_eq:
+			        sprintf(temp, "beq: \n");
+				    break;
+			    case T_ne:
+			        sprintf(temp, "bne: \n");
+			        break;
+			    case T_lt:
+			        sprintf(temp, "blt: \n");
+				    break;
+			    case T_le:
+			        sprintf(temp, "ble: \n");
+			        break;
+			    case T_gt:
+			        sprintf(temp, "bgt: \n");
+			        break;
+			    case T_ge:
+			        sprintf(temp, "bge: \n");
+			        break;
+			    case T_ult:
+			        sprintf(temp, "blt: \n");
+			        break;
+			    case T_ule:
+			        sprintf(temp, "ble: \n");
+			        break;
+			    case T_ugt:
+			        sprintf(temp, "bgt: \n");
+			        break;
+			    case T_uge:
+			        sprintf(temp, "bge: \n");
+			        break;
+			}
+			emit(AS_Oper(temp, NULL, L(munchExp(left), L(munchExp(right), NULL)), NULL));
+			
 			break;	
 		}
 	
 		case T_EXP:{
-			T_exp e0 = s->u.EXP;
+			munchExp(s->u.EXP);
             printf("EXP STMT\n"); // DEBUG
-			if(e0->kind == T_BINOP
-			&& e0->u.BINOP.op == T_plus
-			&& e0->u.BINOP.right->kind == T_CONST){
-				T_exp e1 = e0->u.BINOP.left;
-				T_exp e2 = e0->u.BINOP.right;
-				string temp = malloc(100);
-				sprintf(temp, "add 'd0 <- 's0+'s1\n");
-				
 			break;
-			}
 		}
 	}		
 }
