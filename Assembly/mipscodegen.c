@@ -301,7 +301,7 @@ static void munchStm(T_stm s) {
 			Temp_labelList jumps = s->u.JUMP.jumps;
 			string temp = malloc(100);
 			sprintf(temp, "jal: %s\n", Temp_labelstring(jumps));
-			emit(AS_Oper(temp, L(r, NULL), L(munchExp(e), NULL), NULL));
+		
             printf("JUMP STMT\n"); // DEBUG
 			break;
 		}
@@ -320,7 +320,7 @@ static void munchStm(T_stm s) {
 				T_exp e2 = e0->u.BINOP.right;
 				string temp = malloc(100);
 				sprintf(temp, "add 'd0 <- 's0+'s1\n");
-			//	emit(AS_Oper(temp, L(r, NULL), L(munchExp(e1), L(munchExp(e2), NULL)), NULL));
+				
 			break;
 			}
 		}
