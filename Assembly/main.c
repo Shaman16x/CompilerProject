@@ -46,12 +46,12 @@ A_exp parse(string fname)
 static void doProc(FILE *out, F_frame frame, T_stm body)
 {
 	static seq = 0;
-
+    Temp_map map;
 	AS_proc proc;
 //	struct RA_result allocation;
 	T_stmList stmList;
 	AS_instrList iList;
-
+    
 	fprintf(out, "\nProcedure %d (%s):\n", ++seq, Temp_labelstring(F_name(frame)));
 
 	//printStmList(out, T_StmList(body, NULL));
@@ -64,10 +64,10 @@ static void doProc(FILE *out, F_frame frame, T_stm body)
 
 /* Assignment 6 */
 	iList = F_codegen(frame, stmList);
-	//Temp_map map = NULL;//TODO Create a temp map here
-	//fprintf(out, "BEGIN %s\n", Temp_labelstring(F_name(frame)));
-	//AS_printInstrList (out, iList, map);
-	//fprintf(out, "END %s\n", Temp_labelstring(F_name(frame)));
+	map = Temp_empty();//TODO Create a temp map here
+	fprintf(out, "BEGIN %s\n", Temp_labelstring(F_name(frame)));
+	AS_printInstrList (out, iList, map);
+	fprintf(out, "END %s\n", Temp_labelstring(F_name(frame)));
 
 }
 

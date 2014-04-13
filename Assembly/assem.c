@@ -86,7 +86,8 @@ void AS_format(char *result, string assem,
 {
   char *p;
   int i = 0; /* offset to result string */
-  for(p = assem; p && *p != '\0'; p++)
+  printf("> %s", assem);
+  for(p = assem; p && *p != '\0'; p++){
     if (*p == '`')
       switch(*(++p)) {
       case 's': {int n = atoi(++p);
@@ -117,6 +118,7 @@ void AS_format(char *result, string assem,
       default: assert(0);
       }
     else {result[i] = *p; i++; }
+}
   result[i] = '\0';
 }
 
