@@ -17,6 +17,10 @@
 #include "errormsg.h"
 #include "codegen.h"
 
+ 
+ // for all temporary variables
+Temp_map F_tempMap;// = Temp_empty();
+
 static void emit(AS_instr instr);
 static Temp_temp munchExp(T_exp expr);
 static void munchStm(T_stm stm);
@@ -115,7 +119,7 @@ static Temp_temp munchExp(T_exp e){
                 case T_plus:{
                     if(e1->kind == T_CONST){
                         string temp = malloc(100);
-                        sprintf(temp, "addi ~d0,~s0, %d\n", e1->u.CONST);
+                        sprintf(temp, "addi ~d0, ~s0, %d\n", e1->u.CONST);
                         emit(AS_Oper(temp, L(r, NULL), L(munchExp(e2), NULL), NULL));
                         return r;
                     }

@@ -5,7 +5,6 @@
  * 
  * Activation Record Module
  */
-
 typedef struct F_frame_ *F_frame;
 typedef struct F_access_ *F_access;
 
