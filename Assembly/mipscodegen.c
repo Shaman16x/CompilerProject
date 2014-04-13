@@ -46,6 +46,14 @@ AS_instrList F_codegen(F_frame frame, T_stmList stmList)
 	return asList;
 }
 
+static Temp_tempList munchArgs(int index, T_expList args){
+    Temp_tempList retList;
+    if(args == NULL) return NULL;
+    
+    retList = Temp_TempList(munchExp(args->head), munchArgs(index+1, args->tail));
+    return retList;
+}
+
 static Temp_temp munchExp(T_exp e){
 	switch(e->kind){
         /*
@@ -228,7 +236,7 @@ static Temp_temp munchExp(T_exp e){
         case T_NAME:{
             Temp_temp r = Temp_newtemp();
             printf("NAME EXP\n"); // DEBUG
-            emit(AS_Label("label", e->u.NAME));    // TODO: determine if this is correct handling
+            //emit(AS_Label("label", e->u.NAME));    // TODO: determine if this is correct handling
             return r;
         }
         case T_CONST:{
@@ -241,11 +249,11 @@ static Temp_temp munchExp(T_exp e){
         }
         case T_CALL:{
             /* CALL(e, args) */
-            Temp_temp r;
-            Temp_tempList l = NULL; //TODO create a munch args function call, see pg 212
+            Temp_temp r = munchExp(e->u.CALL.fun);
+            Temp_tempList l = munchArgs(0, e->u.CALL.args);
             printf("CALL EXP\n"); // DEBUG
             r = munchExp(e->u.CALL.fun);
-            emit(AS_Oper("jal\n", NULL, L(r, l), NULL));  //TODO calldefs, pg 212
+            emit(AS_Oper("jal ~s0\n", NULL, L(r, l), NULL));  //TODO calldefs, pg 212
             return r; //TODO correct return?
         }
         default:
@@ -321,7 +329,7 @@ static void munchStm(T_stm s) {
 			T_exp e = s->u.JUMP.exp;
 			Temp_labelList jumps = s->u.JUMP.jumps;
 			string temp = malloc(100);
-			sprintf(temp, "jal \n");
+			sprintf(temp, "jal ~j0\n");
 			emit(AS_Oper(temp, L(r, NULL), L(r, NULL), AS_Targets(jumps)));
             printf("JUMP STMT\n"); // DEBUG
 			break;
