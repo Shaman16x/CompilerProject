@@ -89,9 +89,7 @@ G_graph FG_AssemFlowGraph(AS_instrList il){
 	for (list; list != NULL, list->tail->head != NULL; list = list->tail){
 		
 		G_addEdge(list->head, list->tail->head);
-		if(){
-			//G_addEdge(list, 
-		}
+		
 	}
 	
 	
