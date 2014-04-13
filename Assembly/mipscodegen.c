@@ -86,13 +86,7 @@ static Temp_temp munchExp(T_exp e){
             T_exp e1 = e->u.BINOP.left, e2 = e->u.BINOP.right; 
             printf("BINOP EXP\n"); // DEBUG
             
-            /*  none of these BINOPs are listed in tree.c, so i don't
-             * think you need them.  i think you just need the general BINOP
-             * situation. could be why you were getting
-             * the seg faults.  
-             */
-            
-            /*switch(e->u.BINOP.op){
+            switch(e->u.BINOP.op){
                 case T_plus:{
                     if(e1->kind == T_CONST){
                         char *temp = malloc(100);
@@ -201,7 +195,7 @@ static Temp_temp munchExp(T_exp e){
                 }
                 default:
                     assert(0);
-            }*/
+            }
         }
         case T_TEMP:{
             printf("TEMP EXP\n"); // DEBUG
