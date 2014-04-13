@@ -73,7 +73,32 @@ bool FG_isMove(G_node n){
 
 
 G_graph FG_AssemFlowGraph(AS_instrList il){
-	//G_graph g = G_Graph();
+		// create a new graph from a list of instructions
+	G_graph g = G_Graph();
+	AS_instrList li = il;
+	AS_instr instr;
+		
+	// create a node for each instruction
+	for( li; li != NULL; li = li->tail){
+		G_node n = G_Node(g, li);
+	}
+	
+	//for each node in the graph (nodelist) check for jumps
+	//otherwise an instr falls through to the next to create edges
+	G_nodeList list = G_nodes(g);
+	for (list; list != NULL, list->tail->head != NULL; list = list->tail){
+		
+		G_addEdge(list->head, list->tail->head);
+		if(){
+			//G_addEdge(list, 
+		}
+	}
+	
+	
+		
+	return g;
+}
+
 }
 
 
