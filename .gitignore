@@ -4,7 +4,10 @@
 *.output
 lextest
 parsetest
+parsetest_display
 *.tar
+*.s
+tiger
 
 # autogened C files #
 ##########################
