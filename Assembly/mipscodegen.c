@@ -224,9 +224,10 @@ static Temp_temp munchExp(T_exp e){
         }
         case T_CALL:{
             /* CALL(e, args) */
-            Temp_temp r = munchExp(e);
+            Temp_temp r;
             Temp_tempList l = NULL; //TODO create a munch args function call, see pg 212
             printf("CALL EXP\n"); // DEBUG
+            r = munchExp(e->u.CALL.fun);
             emit(AS_Oper("jal 's0\n", NULL, L(r, l), NULL));  //TODO calldefs, pg 212
             return r; //TODO correct return?
         }
@@ -274,7 +275,8 @@ static void munchStm(T_stm s) {
 				T_exp e2 = src;
 				char temp[100];
 				sprintf(temp, "ADD 'd0 <- 's0 + r0\n");
-                //printf("HERE\n"); //DEBUG
+                printf("%d\n", e2->kind);
+                printf("HERE\n"); //DEBUG
 				emit(AS_Oper(temp, L(e2->u.TEMP,NULL), L(munchExp(e2), NULL), NULL));
                 //printf("THERE\n");
 			}
