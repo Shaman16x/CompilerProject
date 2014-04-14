@@ -8,6 +8,8 @@
 typedef struct F_frame_ *F_frame;
 typedef struct F_access_ *F_access;
 
+Temp_map F_tempMap;
+
 typedef struct F_accessList_ *F_accessList;
 struct F_accessList_ {
 	F_access head;

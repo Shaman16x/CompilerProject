@@ -64,7 +64,7 @@ static void doProc(FILE *out, F_frame frame, T_stm body)
 
 /* Assignment 6 */
 	iList = F_codegen(frame, stmList);
-	map = Temp_name();//TODO Create a temp map here
+	map = F_tempMap;//TODO Create a temp map here
 	fprintf(out, "BEGIN %s\n", Temp_labelstring(F_name(frame)));
 	AS_printInstrList (out, iList, map);
 	fprintf(out, "END %s\n", Temp_labelstring(F_name(frame)));

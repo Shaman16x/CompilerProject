@@ -19,11 +19,12 @@
 
  
  // for all temporary variables
-Temp_map F_tempMap;// = Temp_empty();
+//Temp_map F_tempMap;// = Temp_empty();
 
 static void emit(AS_instr instr);
 static Temp_temp munchExp(T_exp expr);
 static void munchStm(T_stm stm);
+static int tempCount = 0;
 T_exp e1, e2;
 
 Temp_tempList L(Temp_temp h, Temp_tempList t) {
@@ -31,6 +32,18 @@ Temp_tempList L(Temp_temp h, Temp_tempList t) {
 }
 
 static AS_instrList instrList = NULL, last = NULL;
+
+// creates an associated mapping for a temporary
+static void addNumberedTemp(Temp_temp t){
+    string temp;
+    sprintf(temp, "%d", tempCount);
+    Temp_enter(F_tempMap, t, temp);
+}
+
+// creates an associated mapping for a label
+static void addNamedTemp(const string s, Temp_temp t){
+    Temp_enter(F_tempMap, t, s);
+}
 
 static void emit(AS_instr instr)
 {
@@ -43,6 +56,7 @@ AS_instrList F_codegen(F_frame frame, T_stmList stmList)
 {
 	AS_instrList asList = NULL;
 	T_stmList sList = stmList;
+    F_tempMap = Temp_name();
 	for (; sList; sList = sList->tail)
 		munchStm(sList->head);
 	asList = instrList;
@@ -240,6 +254,7 @@ static Temp_temp munchExp(T_exp e){
         case T_NAME:{
             Temp_temp r = Temp_newtemp();
             printf("NAME EXP\n"); // DEBUG
+            addNamedTemp(Temp_labelstring(e->u.NAME), r);
             //emit(AS_Label("label", e->u.NAME));    // TODO: determine if this is correct handling
             return r;
         }
@@ -257,7 +272,7 @@ static Temp_temp munchExp(T_exp e){
             Temp_tempList l = munchArgs(0, e->u.CALL.args);
             printf("CALL EXP\n"); // DEBUG
             r = munchExp(e->u.CALL.fun);
-            emit(AS_Oper("jal ~s0\n", NULL, L(r, l), NULL));  //TODO calldefs, pg 212
+            emit(AS_Oper("jal `s0\n", NULL, L(r, l), NULL));  //TODO calldefs, pg 212
             return r; //TODO correct return?
         }
         default:
@@ -333,7 +348,7 @@ static void munchStm(T_stm s) {
 			T_exp e = s->u.JUMP.exp;
 			Temp_labelList jumps = s->u.JUMP.jumps;
 			string temp = malloc(100);
-			sprintf(temp, "jal ~j0\n");
+			sprintf(temp, "jal `j0\n");
 			emit(AS_Oper(temp, L(r, NULL), L(r, NULL), AS_Targets(jumps)));
             printf("JUMP STMT\n"); // DEBUG
 			break;
