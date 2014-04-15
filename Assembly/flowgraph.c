@@ -119,6 +119,40 @@ G_graph FG_AssemFlowGraph(AS_instrList il){
 
 
 void FG_Showinfo(FILE *out, AS_instr instr, Temp_map map){
-	
+       
+	char r[200]; /* result */
+
+/* For test
+static int cnt=1;
+printf("instr %d\n", cnt++);
+  switch (instr->kind) {
+  case I_OPER:
+    fprintf(out, "OPER: %s", instr->u.OPER.assem);
+    break;
+  case I_LABEL:
+    fprintf(out, "LABEL: %s", instr->u.LABEL.assem);
+    break;
+  case I_MOVE:
+    fprintf(out, "MOVE: %s", instr->u.MOVE.assem);
+    break;
+  }
+return;
+*/
+
+  switch (instr->kind) {
+  case I_OPER:
+    AS_format(r, instr->u.OPER.assem, instr->u.OPER.dst, instr->u.OPER.src, instr->u.OPER.jumps, map);
+    fprintf(out, "%s", r);
+    break;
+  case I_LABEL:
+    AS_format(r, instr->u.LABEL.assem, NULL, NULL, NULL, map); 
+    fprintf(out, "%s", r); 
+    /* instr->u.LABEL->label); */
+    break;
+  case I_MOVE:
+    AS_format(r, instr->u.MOVE.assem, instr->u.MOVE.dst, instr->u.MOVE.src, NULL, map);
+    fprintf(out, "%s", r);
+    break;
+  }	
 }
 
