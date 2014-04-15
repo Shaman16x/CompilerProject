@@ -19,15 +19,15 @@
 
 
 Temp_tempList FG_def(G_node n){
-	AS_instr *instr = G_nodeInfo(n);
+	AS_instr instr = G_nodeInfo(n);
 	if(instr != NULL){
-		switch ((*instr)->kind){
+		switch ((instr)->kind){
 			case I_OPER:{
-				return (*instr)->u.OPER.dst;
+				return (instr)->u.OPER.dst;
 				break;
 			}
 			case I_MOVE:{
-				return (*instr)->u.MOVE.dst;
+				return (instr)->u.MOVE.dst;
 				break;
 			}
 			assert(0); // only 2 kinds have destination regs
@@ -38,15 +38,15 @@ Temp_tempList FG_def(G_node n){
 
 
 Temp_tempList FG_use(G_node n){
-	AS_instr *instr = G_nodeInfo(n);
+	AS_instr instr = G_nodeInfo(n);
 	if(instr != NULL){
-		switch ((*instr)->kind){
+		switch ((instr)->kind){
 			case I_OPER:{
-				return (*instr)->u.OPER.src;
+				return (instr)->u.OPER.src;
 				break;
 			}
 			case I_MOVE:{
-				return (*instr)->u.MOVE.src;
+				return (instr)->u.MOVE.src;
 				break;
 			}
 			assert(0); // only 2 kinds have source regs
@@ -56,23 +56,23 @@ Temp_tempList FG_use(G_node n){
 
 
 bool FG_isMove(G_node n){
-	AS_instr *instr = G_nodeInfo(n);
+	AS_instr instr = G_nodeInfo(n);
 	if(instr != NULL){
-		return ((*instr)->kind == I_MOVE);
+		return ((instr)->kind == I_MOVE);
 	}
 }
 
 bool FG_isLabel(G_node n){
-	AS_instr *instr = G_nodeInfo(n);
+	AS_instr instr = G_nodeInfo(n);
 	if(instr != NULL){
-		return ((*instr)->kind == I_LABEL);
+		return ((instr)->kind == I_LABEL);
 	}
 }
 
 bool FG_isOper(G_node n){
-	AS_instr *instr = G_nodeInfo(n);
+	AS_instr instr = G_nodeInfo(n);
 	if(instr != NULL){
-		return ((*instr)->kind == I_OPER);
+		return ((instr)->kind == I_OPER);
 	}
 }
 
@@ -81,7 +81,7 @@ G_graph FG_AssemFlowGraph(AS_instrList il){
 		// create a new graph from a list of instructions
 	G_graph g = G_Graph();
 	AS_instrList li = il;
-	AS_instr *instr1, *instr2;
+	AS_instr instr1, instr2;
 	
 		
 	// create a node for each instruction
@@ -99,10 +99,12 @@ G_graph FG_AssemFlowGraph(AS_instrList il){
 		G_addEdge(list->head, list->tail->head);
 		 
 		if(FG_isOper(list->head)){
-			instr1 = (AS_instr*)G_nodeInfo(list->head);
-			if((*instr1)->u.OPER.jumps){
-				while((((*instr2) = *((AS_instr*)G_nodeInfo(curr->head)))->u.LABEL.label) != ((*instr1)->u.OPER.jumps)){
+			instr1 = (AS_instr)G_nodeInfo(list->head);
+            instr2 = (AS_instr)G_nodeInfo(curr->head);
+			if((instr1)->u.OPER.jumps){
+                while(instr2->u.LABEL.label != instr1->u.OPER.jumps){
 					curr = curr->tail;
+                    instr2 = (AS_instr)G_nodeInfo(curr->head);
 				}
 				G_addEdge(list->head, curr->head);
 			}
@@ -153,6 +155,6 @@ return;
     AS_format(r, instr->u.MOVE.assem, instr->u.MOVE.dst, instr->u.MOVE.src, NULL, map);
     fprintf(out, "%s", r);
     break;
-  }	
+  }
 }
 
