@@ -86,7 +86,7 @@ void AS_format(char *result, string assem,
 {
   char *p;
   int i = 0; /* offset to result string */
-  printf("> %s", assem);
+  //printf("> %s", assem); //DEBUG
   for(p = assem; p && *p != '\0'; p++){
     if (*p == '`')
       switch(*(++p)) {
@@ -120,6 +120,7 @@ void AS_format(char *result, string assem,
     else {result[i] = *p; i++; }
 }
   result[i] = '\0';
+  printf("> %s", result); // DEBUG
 }
 
 
